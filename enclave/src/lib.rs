@@ -24,6 +24,8 @@ extern crate sgx_types;
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
+extern crate wasmi;
+extern crate wasmi_impl;
 
 use sgx_types::*;
 use std::io::{self, Write};
@@ -36,5 +38,25 @@ pub extern "C" fn ecall_test(some_string: *const u8, some_len: usize) -> sgx_sta
 
     println!("Message from the enclave");
 
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn exec_wasm_test(
+    binary: *const u8,
+    binary_len: usize,
+    result_out: *mut i32,
+) -> sgx_status_t {
+    if binary.is_null() {
+        return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
+    }
+    // Safety: SGX generated code will check that the pointer is valid.
+    let binary_slice = unsafe { slice::from_raw_parts(binary, binary_len) };
+    unsafe {
+        *result_out = match wasmi_impl::exec_wasm(binary_slice) {
+            Ok(Some(wasmi::RuntimeValue::I32(ret))) => ret,
+            Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
+        }
+    };
     sgx_status_t::SGX_SUCCESS
 }

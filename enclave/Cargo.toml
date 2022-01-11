@@ -10,6 +10,10 @@ crate-type = ["staticlib"]
 [features]
 default = []
 
+[dependencies]
+wasmi-impl = { path = "../wasmi-impl" }
+wasmi = { version = "0.11.0", default-features = false }
+
 [target.'cfg(not(target_env = "sgx"))'.dependencies] # You can remove what you don't need, except types and tstd
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_tstd = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["backtrace"] }

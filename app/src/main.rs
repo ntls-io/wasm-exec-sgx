@@ -17,8 +17,12 @@
 
 extern crate sgx_types;
 extern crate sgx_urts;
+extern crate wabt;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
+use std::fs;
+
+static WASM_FILE: &'static str = "get_median.wasm";
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 
@@ -28,6 +32,14 @@ extern "C" {
         retval: *mut sgx_status_t,
         some_string: *const u8,
         len: usize,
+    ) -> sgx_status_t;
+
+    fn exec_wasm_test(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        binary: *const u8,
+        binary_len: usize,
+        result_out: *mut i32,
     ) -> sgx_status_t;
 }
 
@@ -66,12 +78,17 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
+    let binary = fs::read(WASM_FILE).unwrap();
+
+    let mut result_out = 0i32;
+
     let result = unsafe {
-        ecall_test(
+        exec_wasm_test(
             enclave.geteid(),
             &mut retval,
-            input_string.as_ptr() as *const u8,
-            input_string.len(),
+            binary.as_ptr() as _,
+            binary.len(),
+            &mut result_out as _,
         )
     };
 
@@ -83,7 +100,7 @@ fn main() {
         }
     }
 
-    println!("[+] ecall_test success...");
+    println!("[+] ecall_test success, result {:?}", result_out);
 
     enclave.destroy();
 }
