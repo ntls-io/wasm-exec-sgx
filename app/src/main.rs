@@ -74,8 +74,6 @@ fn main() {
         }
     };
 
-    let input_string = String::from("Sending this string to the enclave then printing it\n");
-
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
     let binary = fs::read(WASM_FILE).unwrap();
