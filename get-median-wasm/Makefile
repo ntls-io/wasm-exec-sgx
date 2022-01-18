@@ -1,6 +1,4 @@
 
-# TODO: Environment setup like rustup target add wasm32-wasi
-
 SRC_WASM = ./
 SRC_RST = ./src/
 BIN = ../bin/
