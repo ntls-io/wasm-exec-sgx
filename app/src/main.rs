@@ -22,17 +22,11 @@ use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::fs;
 
-static WASM_FILE: &'static str = "get_median.wasm";
+static WASM_FILE: &str = "get_median.wasm";
 
-static ENCLAVE_FILE: &'static str = "enclave.signed.so";
+static ENCLAVE_FILE: &str = "enclave.signed.so";
 
 extern "C" {
-    fn ecall_test(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        some_string: *const u8,
-        len: usize,
-    ) -> sgx_status_t;
 
     fn exec_wasm_test(
         eid: sgx_enclave_id_t,
