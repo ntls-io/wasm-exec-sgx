@@ -34,18 +34,6 @@ use std::io::{self, Write};
 use std::slice;
 
 /// # Safety
-/// The caller needs to ensure that `some_string` is a valid pointer to a slice valid for `some_len` items.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_test(some_string: *const u8, some_len: usize) -> sgx_status_t {
-    let str_slice = unsafe { slice::from_raw_parts(some_string, some_len) };
-    let _ = io::stdout().write(str_slice);
-
-    println!("Message from the enclave");
-
-    sgx_status_t::SGX_SUCCESS
-}
-
-/// # Safety
 /// The caller needs to ensure that `binary` is a valid pointer to a slice valid for `binary_len` items
 /// and that `result_out` is a valid pointer.
 #[no_mangle]
