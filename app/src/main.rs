@@ -78,9 +78,9 @@ fn main() {
         exec_wasm_test(
             enclave.geteid(),
             &mut retval,
-            binary.as_ptr() as _,
+            binary.as_ptr(),
             binary.len(),
-            &mut result_out as _,
+            &mut result_out,
         )
     };
 
