@@ -45,7 +45,6 @@ pub fn exec_wasm(binary: &[u8]) -> Result<Option<RuntimeValue>, ExecWasmError> {
     let module = wasmi::Module::from_buffer(binary)?;
     // TODO: This panics. We probably want to run start functions
     let instance = ModuleInstance::new(&module, &ImportsBuilder::default())?.assert_no_start();
-    // let instance = ModuleInstance::new(&module, &ImportsBuilder::default())?.assert_no_start();
     Ok(instance.invoke_export(ENTRYPOINT, &[], &mut NopExternals)?)
 }
 
