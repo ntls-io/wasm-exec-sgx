@@ -23,8 +23,13 @@ pub fn exec_wasm_with_data(
 ) -> Result<Option<RuntimeValue>, ExecWasmError> {
     let module = wasmi::Module::from_buffer(binary)?;
 
-    // TODO: Calculate the memory size always be larger than `data`
-    let mem_instance = MemoryInstance::alloc(Pages(200), None)?;
+    // Calculate the memory size always be larger than `data`
+    let data_size = &data.len();
+    let num_pages = match data_size % (64 * 1024) {
+        0 => data_size / (64 * 1024),
+        _ => data_size / (64 * 1024) + 1,
+    };
+    let mem_instance = MemoryInstance::alloc(Pages(num_pages), Pages(num_pages))?;
 
     // TODO: Error Handling
     mem_instance.set(0, data).unwrap();
