@@ -2,7 +2,8 @@
 extern crate alloc;
 
 use core::cmp;
-use alloc::vec::{self, Vec};
+use alloc::vec::Vec;
+use alloc::vec;
 use wasmi::{
     self, memory_units::Pages, ExternVal, ImportsBuilder, MemoryInstance,
     ModuleInstance, NopExternals, RuntimeValue,
@@ -28,9 +29,9 @@ impl From<wasmi::Error> for ExecWasmError {
     }
 }
 
-struct Proc {
-    out_buffer: Vec<u8>,
-    return_code: Option<RuntimeValue>,
+pub struct Proc {
+    pub out_buffer: Vec<u8>,
+    pub return_code: Option<RuntimeValue>,
 }
 
 impl<'a> Proc {
@@ -39,7 +40,7 @@ impl<'a> Proc {
     }
 }
 
-pub fn exec_wasm_with_data<'a>(
+pub fn exec_wasm_with_data (
     binary: &[u8],
     data: &[u8],
     out_size: usize, /* output size in bytes */
@@ -78,11 +79,11 @@ pub fn exec_wasm_with_data<'a>(
         &[RuntimeValue::I32(0), RuntimeValue::I32(data.len() as i32)],
         &mut NopExternals,
     )?;
-    let proc = Proc {
+    let mut proc = Proc {
         out_buffer: vec![0u8; out_size],
         return_code,
     };
-    mem_instance.get_into(data_size as u32, proc.out_buffer.as_mut_slice());
+    mem_instance.get_into(data_size as u32, proc.out_buffer.as_mut_slice())?;
     Ok(proc)
 }
 
