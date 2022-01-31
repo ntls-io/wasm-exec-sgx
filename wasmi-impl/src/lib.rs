@@ -1,10 +1,21 @@
 #![no_std]
+extern crate alloc;
+
+use core::cmp;
+use alloc::vec::{self, Vec};
 use wasmi::{
-    self, memory_units::Pages, ExternVal, ImportsBuilder, MemoryInstance, ModuleInstance,
-    NopExternals, RuntimeValue,
+    self, memory_units::Pages, ExternVal, ImportsBuilder, MemoryInstance,
+    ModuleInstance, NopExternals, RuntimeValue,
 };
 
 static ENTRYPOINT: &str = "exec";
+static MAX_MEMORY_KIB: usize = 128 * 1024;
+static MAX_PAGES: usize = match MAX_MEMORY_KIB % 64 {
+    0 => MAX_MEMORY_KIB / 64,
+    _ => MAX_MEMORY_KIB / 64 + 1,
+};
+static MEM_SMALL_BYTES: usize = 128 / 8;
+static PAGE_SIZE_BYTES: usize = 64 * 1024;
 
 #[derive(Debug)]
 pub enum ExecWasmError {
@@ -17,33 +28,62 @@ impl From<wasmi::Error> for ExecWasmError {
     }
 }
 
-pub fn exec_wasm_with_data(
+struct Proc {
+    out_buffer: Vec<u8>,
+    return_code: Option<RuntimeValue>,
+}
+
+impl<'a> Proc {
+    pub fn bytes(&'a self) -> impl 'a + Iterator {
+        self.out_buffer.iter()
+    }
+}
+
+pub fn exec_wasm_with_data<'a>(
     binary: &[u8],
     data: &[u8],
-) -> Result<Option<RuntimeValue>, ExecWasmError> {
+    out_size: usize, /* output size in bytes */
+) -> Result<Proc, ExecWasmError> {
     let module = wasmi::Module::from_buffer(binary)?;
 
-    // Calculate the memory size always be larger than `data`
-    let data_size = &data.len();
-    let num_pages = match data_size % (64 * 1024) {
-        0 => data_size / (64 * 1024),
-        _ => data_size / (64 * 1024) + 1,
-    };
-    let mem_instance = MemoryInstance::alloc(Pages(num_pages), Pages(num_pages))?;
+    let data_size = data.len();
+
+    /*
+     *  Calculate the memory size to always be larger than `data`.  Small
+     *  values (a WASM numeric vector or smaller) should always fit.
+     */
+    let calc_rem = |num_bytes| cmp::max(num_bytes, MEM_SMALL_BYTES) % PAGE_SIZE_BYTES;
+    let calc_pages = |num_bytes| cmp::max(num_bytes, MEM_SMALL_BYTES) / PAGE_SIZE_BYTES;
+    let combined_size = data_size + out_size;
+    let num_pages = cmp::min(
+        MAX_PAGES,
+        match calc_rem(combined_size) {
+            0 => calc_pages(combined_size),
+            _ => calc_pages(combined_size) + 1,
+        },
+    );
+
+    let mem_instance = MemoryInstance::alloc(Pages(num_pages), Some(Pages(MAX_PAGES)))?;
 
     // TODO: Error Handling
     mem_instance.set(0, data).unwrap();
 
-    let imports = [ExternVal::Memory(mem_instance)];
+    let imports = [ExternVal::Memory(mem_instance.clone())];
 
     // TODO: This panics. We probably want to run start functions
     let instance = ModuleInstance::with_externvals(&module, imports.iter())?.assert_no_start();
 
-    Ok(instance.invoke_export(
+    let return_code = instance.invoke_export(
         ENTRYPOINT,
         &[RuntimeValue::I32(0), RuntimeValue::I32(data.len() as i32)],
         &mut NopExternals,
-    )?)
+    )?;
+    let proc = Proc {
+        out_buffer: vec![0u8; out_size],
+        return_code,
+    };
+    mem_instance.get_into(data_size as u32, proc.out_buffer.as_mut_slice());
+    Ok(proc)
 }
 
 pub fn exec_wasm(binary: &[u8]) -> Result<Option<RuntimeValue>, ExecWasmError> {
