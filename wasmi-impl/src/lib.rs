@@ -1,14 +1,24 @@
 #![no_std]
+extern crate alloc;
+
+use alloc::vec;
+use alloc::vec::Vec;
 use wasmi::{
-    self, memory_units::Pages, ExternVal, ImportsBuilder, MemoryInstance, ModuleInstance,
-    NopExternals, RuntimeValue,
+    self,
+    memory_units::{Bytes, Pages, RoundUpTo},
+    ExternVal, ImportsBuilder, MemoryInstance, ModuleInstance, NopExternals, RuntimeValue,
 };
 
 static ENTRYPOINT: &str = "exec";
 
+const MAX_MEMORY_KIB: usize = 128 * 1024;
+const MAX_PAGES: Pages = Pages(MAX_MEMORY_KIB);
+
 #[derive(Debug)]
 pub enum ExecWasmError {
     WasmiError(wasmi::Error),
+    WasmiReturn(i32),
+    InvalidModule,
 }
 
 impl From<wasmi::Error> for ExecWasmError {
@@ -17,28 +27,68 @@ impl From<wasmi::Error> for ExecWasmError {
     }
 }
 
+pub struct WasmOutput {
+    out_buffer: Vec<u8>,
+    return_code: Option<RuntimeValue>,
+}
+
+impl WasmOutput {
+    pub fn out_buffer(&self) -> &[u8] {
+        self.out_buffer.as_slice()
+    }
+    pub fn return_code(&self) -> Option<RuntimeValue> {
+        self.return_code
+    }
+}
+
+pub fn calc_num_pages(data_size: usize, out_size: usize) -> Result<Pages, ExecWasmError> {
+    let combined_size = match data_size.checked_add(out_size) {
+        None => Err(ExecWasmError::InvalidModule),
+        Some(size) => Ok(Bytes(size)),
+    }?;
+
+    let num_pages: Pages = combined_size.round_up_to();
+    if num_pages > MAX_PAGES {
+        Err(ExecWasmError::InvalidModule)
+    } else {
+        Ok(num_pages)
+    }
+}
+
 pub fn exec_wasm_with_data(
     binary: &[u8],
     data: &[u8],
-) -> Result<Option<RuntimeValue>, ExecWasmError> {
+    out_size: usize,
+) -> Result<Vec<u8>, ExecWasmError> {
     let module = wasmi::Module::from_buffer(binary)?;
 
-    // TODO: Calculate the memory size always be larger than `data`
-    let mem_instance = MemoryInstance::alloc(Pages(200), None)?;
+    let data_size = data.len();
+
+    let num_pages = calc_num_pages(data_size, out_size)?;
+    let mem_instance = MemoryInstance::alloc(num_pages, Some(MAX_PAGES))?;
 
     // TODO: Error Handling
     mem_instance.set(0, data).unwrap();
 
-    let imports = [ExternVal::Memory(mem_instance)];
+    let imports = [ExternVal::Memory(mem_instance.clone())];
 
     // TODO: This panics. We probably want to run start functions
     let instance = ModuleInstance::with_externvals(&module, imports.iter())?.assert_no_start();
 
-    Ok(instance.invoke_export(
+    let return_code = instance.invoke_export(
         ENTRYPOINT,
         &[RuntimeValue::I32(0), RuntimeValue::I32(data.len() as i32)],
         &mut NopExternals,
-    )?)
+    )?;
+    match return_code {
+        Some(RuntimeValue::I32(0)) => {
+            let mut wasm_output = vec![0u8; out_size];
+            mem_instance.get_into(data_size as u32, wasm_output.as_mut_slice())?;
+            Ok(wasm_output)
+        }
+        Some(RuntimeValue::I32(code)) => Err(ExecWasmError::WasmiReturn(code)),
+        _ => Err(ExecWasmError::InvalidModule),
+    }
 }
 
 pub fn exec_wasm(binary: &[u8]) -> Result<Option<RuntimeValue>, ExecWasmError> {
