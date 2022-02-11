@@ -14,9 +14,15 @@ export function alloc(count: i32): usize {
 }
 
 // note that a median can have a fractional part
-export function exec(msg: usize, msg_len: usize): f64 {
-	let val = new Array<i32>(msg_len as i32);
-	let len = msg_len as i32;
+export function exec(msg: usize, msg_len: usize, out_ptr: usize, out_size: usize): i32 {
+	/* error if msg size is not a multiple of 32 in bits */
+	if (msg_len % 4 != 0) { return -1 }
+	let count = msg_len / 4;
+	let val = new Array<i32>(count as i32);
+
+	/* convert length to bits from octets */
+	let len = (msg_len * 8) as i32;
+
 	for(let i = 0; i < len; i++) {
 		val[i] = load<i32>(msg + (i * 32));
 	}
@@ -32,8 +38,13 @@ export function exec(msg: usize, msg_len: usize): f64 {
 
 	let sum = (val[lmid as i32] + val[rmid as i32]) as f64;
 	let median = sum / 2.0;
-	return median;
 
+	/* create and populate the output buffer */
+	out_size = 64 / 8;
+	out_ptr = memory.data(64);
+	store<f64>(out_ptr, median)
+
+	return 0;
 }
 
 function calc_mid(len: usize, rhs: bool): usize {
