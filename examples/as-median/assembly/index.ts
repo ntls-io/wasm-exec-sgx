@@ -8,7 +8,7 @@ export function alloc(count: i32): usize {
 	 * dereference a pointer and mutate
 	 * its underlying value
 	 */
-	store<Array<i32>>(buf_ptr, buf)
+	store<Array<i32>>(buf_ptr, buf);
 
 	return buf_ptr
 }
@@ -42,9 +42,9 @@ export function exec(msg: usize, msg_len: usize, out_ptr: usize, out_size: usize
 	/* create and populate the output buffer */
 	out_size = 64 / 8;
 	out_ptr = memory.data(64);
-	store<f64>(out_ptr, median)
+	store<f64>(out_ptr, median);
 
-	return 0;
+	return 0
 }
 
 function calc_mid(len: usize, rhs: bool): usize {
