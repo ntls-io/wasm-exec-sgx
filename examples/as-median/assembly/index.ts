@@ -14,7 +14,7 @@ export function alloc(count: i32): usize {
 }
 
 // note that a median can have a fractional part
-export function exec(msg: usize, msg_len: usize, out_ptr: usize, out_size: usize): i32 {
+export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
 	/* error if msg size is not a multiple of 32 in bits */
 	if (msg_len % 4 != 0) { return -1 }
 	let count = msg_len / 4;
@@ -28,23 +28,30 @@ export function exec(msg: usize, msg_len: usize, out_ptr: usize, out_size: usize
 	}
 	val.sort();
 
+	let median = calc_median(len, val);
+
+	/*
+	 * assume `out_ptr` points to a 64 bit
+	 * memory buffer and populate it
+	 */
+	store<f64>(out_ptr, median);
+
+	return 0
+}
+
+function calc_median(len: i32, val: Array<i32>): f64 {
 	/*
 	 * in the following, `lmid` and `rmid` are the same
 	 * whenever `val` has odd length. Note also that the
 	 * average of 2 identical values is simply that value.
 	 */
-	let lmid = calc_mid(msg_len, 0);
-	let rmid = calc_mid(msg_len, 1);
+	let lmid = calc_mid(len, 0);
+	let rmid = calc_mid(len, 1);
 
 	let sum = (val[lmid as i32] + val[rmid as i32]) as f64;
 	let median = sum / 2.0;
 
-	/* create and populate the output buffer */
-	out_size = 64 / 8;
-	out_ptr = memory.data(64);
-	store<f64>(out_ptr, median);
-
-	return 0
+	return median
 }
 
 function calc_mid(len: usize, rhs: bool): usize {
