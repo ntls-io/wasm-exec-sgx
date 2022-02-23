@@ -6,9 +6,9 @@ export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
 	let val = new Array<i32>(count as i32);
 
 	/* convert length to bits from octets */
-	let len = (msg_len * 8) as i32;
+	let len = msg_len * 8;
 
-	for(let i = 0; i < len; i++) {
+	for(let i = 0; i < (len as i32); i++) {
 		val[i] = load<i32>(msg + (i * 32));
 	}
 	val.sort();
@@ -22,7 +22,7 @@ export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
 }
 
 /* recall that a median can have a fractional part */
-function calc_median(len: i32, val: Array<i32>): f64 {
+function calc_median(len: usize, val: Array<i32>): f64 {
 	/*
 	 * In the following, `lmid` and `rmid` are the same whenever `val` has
 	 * odd length. Note also that the average of 2 identical values is
