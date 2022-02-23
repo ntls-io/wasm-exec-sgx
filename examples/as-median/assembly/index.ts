@@ -1,19 +1,4 @@
 
-export function alloc(count: i32): usize {
-	/* allocate memory buffer */
-	let buf = new Array<i32>(count);
-	let buf_ptr = memory.data(32);
-
-	/*
-	 * dereference a pointer and mutate
-	 * its underlying value
-	 */
-	store<Array<i32>>(buf_ptr, buf);
-
-	return buf_ptr
-}
-
-// note that a median can have a fractional part
 export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
 	/* error if msg size is not a multiple of 32 in bits */
 	if (msg_len % 4 != 0) { return -1 }
@@ -30,20 +15,18 @@ export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
 
 	let median = calc_median(len, val);
 
-	/*
-	 * assume `out_ptr` points to a 64 bit
-	 * memory buffer and populate it
-	 */
+	/* assume `out_ptr` points to a 64 bit memory buffer and populate it */
 	store<f64>(out_ptr, median);
 
 	return 0
 }
 
+/* recall that a median can have a fractional part */
 function calc_median(len: i32, val: Array<i32>): f64 {
 	/*
-	 * in the following, `lmid` and `rmid` are the same
-	 * whenever `val` has odd length. Note also that the
-	 * average of 2 identical values is simply that value.
+	 * In the following, `lmid` and `rmid` are the same whenever `val` has
+	 * odd length. Note also that the average of 2 identical values is
+	 * simply the value itself.
 	 */
 	let lmid = calc_mid(len, 0);
 	let rmid = calc_mid(len, 1);
@@ -55,6 +38,11 @@ function calc_median(len: i32, val: Array<i32>): f64 {
 }
 
 function calc_mid(len: usize, rhs: bool): usize {
+	/*
+	 * Compute the index of the order statistic corresponding to the median
+	 * if the former exists.  Otherwise, return a choice of one of the two
+	 * closest order statistics.
+	 */
 	if (len % 2 == 0) {
 		if (rhs) {
 			let rmid = len / 2 + 1;
