@@ -28,8 +28,8 @@ function calc_median(len: usize, val: Array<i32>): f64 {
 	 * odd length. Note also that the average of 2 identical values is
 	 * simply the value itself.
 	 */
-	let lmid = calc_mid(len, 0);
-	let rmid = calc_mid(len, 1);
+	let lmid = calc_mid(len, 0) as i32;
+	let rmid = calc_mid(len, 1) as i32;
 
 
 	/* calculate aforementioned average by leveraging distributivity */
