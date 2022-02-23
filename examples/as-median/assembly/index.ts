@@ -31,8 +31,11 @@ function calc_median(len: usize, val: Array<i32>): f64 {
 	let lmid = calc_mid(len, 0);
 	let rmid = calc_mid(len, 1);
 
-	let sum = (val[lmid as i32] + val[rmid as i32]) as f64;
-	let median = sum / 2.0;
+
+	/* calculate aforementioned average by leveraging distributivity */
+	let lhalf = (val[lmid] as f64) / 2.0;
+	let rhalf = (val[rmid] as f64) / 2.0;
+	let median = lhalf + rhalf;
 
 	return median
 }
