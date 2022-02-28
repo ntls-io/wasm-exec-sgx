@@ -23,6 +23,8 @@ export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
 
 /* recall that a median can have a fractional part */
 function calc_median(len: usize, val: Array<i32>): f64 {
+	val.sort();
+
 	/*
 	 * In the following, `lmid` and `rmid` are the same whenever `val` has
 	 * odd length. Note also that the average of 2 identical values is
