@@ -1,22 +1,30 @@
 
-export function exec(msg: usize, msg_len: usize, out_ptr: usize): i32 {
-	/* error if msg size is not a multiple of 32 in bits */
-	if (msg_len % 4 != 0) { return -1 }
-	let count = msg_len / 4;
-	let val = new Array<i32>(count as i32);
+import { parse, Arr, Integer, Value } from "assemblyscript-json/JSON";
 
-	/* convert length to bits from octets */
-	let len = msg_len * 8;
+export function exec(msg: usize, out_ptr: usize): i32 {
 
-	for(let i = 0; i < (len as i32); i++) {
-		val[i] = load<i32>(msg + (i * 32));
+	let in_buf_raw = load<ArrayBuffer>(load<usize>(msg));
+	let in_buf = Uint8Array.wrap(in_buf_raw);
+
+	/* parse input buffer into an Array<i32> */
+	let arr = parse(in_buf) as Arr;
+	let value_array = arr.valueOf() as Array<Value>;
+	let len = value_array.length;
+	let sample = new Array<i32>(len);
+	for(let i = 0; i < len; i++) {
+		let entry = value_array[i] as Integer;
+		sample[i] = entry.valueOf() as i32;
 	}
-	val.sort();
 
-	let median = calc_median(len, val);
+	let median = calc_median(len, sample);
+	let out = '{ median: ${median} }';
 
-	/* assume `out_ptr` points to a 64 bit memory buffer and populate it */
-	store<f64>(out_ptr, median);
+	/* encode JSON object and obtain pointer */
+	let out_buf = String.UTF8.encode(out);
+	let out_buf_len = out_buf.byteLength;
+	let out_buf_ptr = memory.data(8);
+	store<ArrayBuffer>(out_buf_ptr, out_buf);
+	store<usize[]>(out_ptr, [out_buf_ptr, out_buf_len]);
 
 	return 0
 }
