@@ -1,10 +1,14 @@
 
 import { parse, Arr, Integer, Value } from "assemblyscript-json/JSON";
 
-export function exec(msg: usize, out_ptr: usize): i32 {
+export function exec(msg: usize, msg_size: usize, out_ptr: usize, out_size: usize): i32 {
 
-	let in_buf_raw = load<ArrayBuffer>(load<usize>(msg));
-	let in_buf = Uint8Array.wrap(in_buf_raw);
+	/* load input buffer into array */
+	let in_buf = new Uint8Array(msg_size as i32);
+	for(let i: usize = 0; i < msg_size; i++) {
+	    let byte = load<u8>(msg + i);
+	    in_buf[i as i32] = byte;
+	}
 
 	/* parse input buffer into an Array<i32> */
 	let arr = parse(in_buf) as Arr;
