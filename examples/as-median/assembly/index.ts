@@ -31,19 +31,14 @@ export function exec(msg: usize, msg_size: usize, out_ptr: usize, out_size: usiz
 
 	/* get pointer to buffer address */
 	let out_buf = encoder.serialize().buffer;
-	let out_buf_len = out_buf.byteLength as usize;
+	let out_buf_len = out_buf.byteLength;
 	let out_buf_ptr = memory.data(8);
 	store<ArrayBuffer>(out_buf_ptr, out_buf);
 	store<usize>(out_ptr, out_buf_ptr);
 
 	/* get pointer to buffer's size address */
-	let out_size_ptr: usize = 0;
-	if (typeof out_buf_len == "i32") {
-	    out_size_ptr = memory.data(32);
-	} else {
-	    out_size_ptr = memory.data(64);
-	}
-	store<usize>(out_size_ptr, out_buf_len);
+	let out_size_ptr = memory.data(32);
+	store<i32>(out_size_ptr, out_buf_len);
 	store<usize>(out_size, out_size_ptr);
 
 	return 0
