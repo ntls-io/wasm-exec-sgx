@@ -1,4 +1,5 @@
 
+import { JSONEncoder } from "assemblyscript-json"
 import { parse, Arr, Integer, Value } from "assemblyscript-json/JSON";
 
 export function exec(msg: usize, msg_size: usize, out_ptr: usize, out_size: usize): i32 {
@@ -21,14 +22,29 @@ export function exec(msg: usize, msg_size: usize, out_ptr: usize, out_size: usiz
 	}
 
 	let median = calc_median(len, sample);
-	let out = '{ median: ${median} }';
 
-	/* encode JSON object and obtain pointer */
-	let out_buf = String.UTF8.encode(out);
-	let out_buf_len = out_buf.byteLength;
+	/* encode JSON object */
+	let encoder = new JSONEncoder();
+	encoder.pushObject(null);
+	encoder.setFloat("median", median);
+	encoder.popObject();
+
+	/* get pointer to buffer address */
+	let out_buf = encoder.serialize().buffer;
+	let out_buf_len = out_buf.byteLength as usize;
 	let out_buf_ptr = memory.data(8);
 	store<ArrayBuffer>(out_buf_ptr, out_buf);
-	store<usize[]>(out_ptr, [out_buf_ptr, out_buf_len]);
+	store<usize>(out_ptr, out_buf_ptr);
+
+	/* get pointer to buffer's size address */
+	let out_size_ptr: usize = 0;
+	if (typeof out_buf_len == "i32") {
+	    out_size_ptr = memory.data(32);
+	} else {
+	    out_size_ptr = memory.data(64);
+	}
+	store<usize>(out_size_ptr, out_buf_len);
+	store<usize>(out_size, out_size_ptr);
 
 	return 0
 }
