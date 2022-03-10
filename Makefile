@@ -2,10 +2,11 @@
 
 SRC_U = app/
 SRC_T = enclave/
+SRC_WASM= get-median-wasm/
 
 # Compilation process, will call the appropriate makefiles.
 
-all: host enclave
+all: host enclave wasm
 
 host:
 	@echo "\033[32mRequest to compile the host part...\033[0m"
@@ -15,9 +16,14 @@ enclave:
 	@echo "\033[32mRequest to compile the enclave part...\033[0m"
 	@make -C $(SRC_T)
 
+wasm:
+	@echo "\033[32mRequest to compile the wasm part...\033[0m"
+	@make -C $(SRC_WASM)
+
 clean:
 	@make -C $(SRC_U) clean
 	@make -C $(SRC_T) clean
+	@make -C $(SRC_WASM) clean
 
 fclean:
 	@make -C $(SRC_U) fclean

@@ -1,0 +1,9 @@
+/bin
+*/target
+/obj
+/lib
+*/Enclave_u.c
+*/Enclave_u.h
+*/Enclave_t.c
+*/Enclave_t.h
+*/*.pem
