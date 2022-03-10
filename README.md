@@ -1,1 +1,75 @@
 # NTC - WASM component
+
+### Requirements
+
+- Operating system:
+    - Recommended: Ubuntu 20.04 (LTS)
+- Packages:
+    - `make`
+    - `clang` (recommended) or `gcc`
+    - `cmake`
+    - `autoconf`
+    - `libtool`
+- Snaps:
+    - `docker`
+- Rust toolchain:
+    - See [#rust-ecosystem]
+
+### Rust ecosystem
+
+Install `rustup` as described at [rustup.rs](https://rustup.rs/).  If you did
+not explicitly select `nightly` as your default toolchain then do so now
+```
+$ rustup default nightly
+```
+
+You will now have the `cargo` build tool, as well as the nigtly `rustc` compiler
+installed on your system and may now continue setting up your environment.
+
+### Environment
+
+**NOTE:** If you opted to install `gcc` as your compiler, make sure you run
+```
+export CC=gcc; export CXX=g++
+```
+Otherwise you may safely continue.
+
+The Rust and Intel SGX SDKs need to be installed and the
+relevant environment variables need to be set.  In order to facilitate this, we
+use the convenience scripts provided at [rust-sgx-sdk-env].
+
+1. Make sure the `docker` daemon is running, otherwise start it with
+   ```
+   $ systemctl start snap.docker.dockerd
+   ```
+2. In order to run the scripts as a non-root user, follow the
+   [docker-postinstall](post-installation instructions) set out in the Docker
+   documentation (note, in particular, that a restart may be necessary).
+3. Run the latest "prepare" script:
+   ```
+   $ ./prepare-1.1.14-intel-2.15.1.sh
+   ```
+4. Finally, assuming `bash` is the current shell, source the environment file in
+   the top level of the repository:
+   ```
+   $ source environment
+   ```
+
+### Instructions
+
+1. Before proceeding, make sure your [environment is set up](#environment)
+   properly.
+2. Clone the project repository into the current directory
+    ```
+    $ git clone https://github.com/ntls-io/wasm-exec-sgx
+    ```
+   and `cd` into it.
+3. Run `make all` to compile the entire project.
+4. In order to test the provided Wasm binary, change to the current directory
+   to the `wasmi-impl` subdirectory and execute the following:
+    ```
+    cargo test
+    ```
+
+[docker-postinstall]: https://docs.docker.com/engine/install/linux-postinstall/
+[rust-sgx-sdk-env]: https://github.com/PiDelport/rust-sgx-sdk-dev-env

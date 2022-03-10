@@ -1,5 +1,8 @@
 # Dummy makefile, will call the host and enclave makefile when requested.
 
+C?= clang
+CXX?= clang++
+
 SRC_U = app/
 SRC_T = enclave/
 SRC_WASM= get-median-wasm/
