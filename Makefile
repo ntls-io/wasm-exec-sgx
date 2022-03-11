@@ -1,7 +1,7 @@
 # Dummy makefile, will call the host and enclave makefile when requested.
 
-C?= clang
-CXX?= clang++
+CC ?= clang
+CXX ?= clang++
 
 SRC_U = app/
 SRC_T = enclave/
