@@ -69,8 +69,8 @@ use the convenience scripts provided at [rust-sgx-sdk-env].
     ```
    and `cd` into it.
 3. Run `make all` to compile the entire project.
-4. In order to test the provided Wasm binary, change to the current directory
-   to the `wasmi-impl` subdirectory and execute the following:
+4. In order to test the provided Wasm binary, change the current directory to
+   the `wasmi-impl` subdirectory and execute the following:
     ```
     cargo test
     ```
