@@ -20,6 +20,10 @@
 Install `rustup` as described at [rustup.rs](https://rustup.rs/).  If you did
 not explicitly select `nightly` as your default toolchain then do so now
 ```
+$ rustup install nightly
+```
+followed by
+```
 $ rustup default nightly
 ```
 
