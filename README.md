@@ -49,11 +49,16 @@ use the convenience scripts provided at [rust-sgx-sdk-env].
 2. In order to run the scripts as a non-root user, follow the
    [docker-postinstall](post-installation instructions) set out in the Docker
    documentation (note, in particular, that a restart may be necessary).
-3. Run the latest "prepare" script:
+3. Clone the repository at [rust-sgx-sdk-env]
+   ```
+   $ git clone https://github.com/PiDelport/rust-sgx-sdk-dev-env
+   ```
+   and `cd` into it.
+4. Run the latest "prepare" script:
    ```
    $ ./prepare-1.1.14-intel-2.15.1.sh
    ```
-4. Finally, assuming `bash` is the current shell, source the environment file in
+5. Finally, assuming `bash` is the current shell, source the environment file in
    the top level of the repository:
    ```
    $ source environment
@@ -63,7 +68,7 @@ use the convenience scripts provided at [rust-sgx-sdk-env].
 
 1. Before proceeding, make sure your [environment is set up](#environment)
    properly.
-2. Clone the project repository into the current directory
+2. Clone the project repository
     ```
     $ git clone https://github.com/ntls-io/wasm-exec-sgx
     ```
