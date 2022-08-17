@@ -24,13 +24,11 @@
 
 extern crate sgx_types;
 #[cfg(not(target_env = "sgx"))]
-#[macro_use]
 extern crate sgx_tstd as std;
 extern crate wasmi;
 extern crate wasmi_impl;
 
 use sgx_types::*;
-use std::io::{self, Write};
 use std::slice;
 
 /// # Safety
@@ -40,17 +38,17 @@ use std::slice;
 pub unsafe extern "C" fn exec_wasm_test(
     binary: *const u8,
     binary_len: usize,
-    result_out: *mut i32,
+    result_out: *mut f64,
 ) -> sgx_status_t {
     if binary.is_null() {
         return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
     }
     // Safety: SGX generated code will check that the pointer is valid.
     let binary_slice = unsafe { slice::from_raw_parts(binary, binary_len) };
-    let data = b"[1,2,3,4,5]";
+    let data = b"[1.24,2.0,3.4,4.7,5.5]";
     unsafe {
         *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
-            Ok(Some(wasmi::RuntimeValue::I32(ret))) => ret,
+            Ok(Some(wasmi::RuntimeValue::F64(ret))) => ret.to_float(),
             Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
         }
     };
