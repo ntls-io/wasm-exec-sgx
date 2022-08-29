@@ -26,7 +26,7 @@ enclave {
     trusted
     {
         /* ECALLs */
-        public sgx_status_t exec_wasm_test([in, count=binary_len] const uint8_t* binary, size_t binary_len, [out] int32_t* result_out);
+        public sgx_status_t exec_wasm_test([in, count=binary_len] const uint8_t* binary, size_t binary_len, [out] double* result_out);
     };
     untrusted
     {
