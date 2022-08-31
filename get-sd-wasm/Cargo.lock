@@ -100,7 +100,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "get-mean-wasm"
+name = "get-sd-wasm"
 version = "0.1.0"
 dependencies = [
  "serde-json-core",

@@ -22,7 +22,7 @@ use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::fs;
 
-static WASM_FILE: &str = "get_mean.wasm";
+static WASM_FILE: &str = "get_sd.wasm";
 
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
