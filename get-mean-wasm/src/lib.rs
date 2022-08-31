@@ -22,18 +22,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works_odd() {
-        let data = b"[8.0, 6.0, 3.0, 3.0, 7.0, 1.0, 9.0]";
+    fn mean_works() {
+        let data = b"[9.0, 6.0, 3.0, 3.0, 6.0, 9.0]";
 
         let res = unsafe { exec(data.as_ptr(), data.len() as u32) };
         assert_eq!(res, 6.0);
     }
 
-    #[test]
-    fn it_works_even() {
-        let data = b"[5.0, 2.0, 3.0, 1.0, 7.0, 6.0, 4.0, 9.0]";
-
-        let res = unsafe { exec(data.as_ptr(), data.len() as u32) };
-        assert_eq!(res, 4.5);
-    }
 }

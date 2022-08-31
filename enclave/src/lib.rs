@@ -30,6 +30,8 @@ extern crate wasmi_impl;
 
 use sgx_types::*;
 use std::slice;
+use std::vec;
+use std::{format};
 
 /// # Safety
 /// The caller needs to ensure that `binary` is a valid pointer to a slice valid for `binary_len` items
@@ -45,9 +47,15 @@ pub unsafe extern "C" fn exec_wasm_test(
     }
     // Safety: SGX generated code will check that the pointer is valid.
     let binary_slice = unsafe { slice::from_raw_parts(binary, binary_len) };
-    let data = b"[1.24,2.0,3.4,4.7,5.5]";
+    
+    // TODO: Unsealing operation - waiting on sealing functionality
+
+    let import_data: vec::Vec<f64> =  vec![1.24,2.0,3.4,4.7,5.5,10.5];
+    let data_string = format!("{:?}",import_data);
+    let data_slice = data_string.as_str().as_bytes();
+
     unsafe {
-        *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
+        *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data_slice) {
             Ok(Some(wasmi::RuntimeValue::F64(ret))) => ret.to_float(),
             Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
         }
