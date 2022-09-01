@@ -2,7 +2,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 use core::slice;
 
-/// Calculates the mean of an array of floats passed in as a JSON array.
+/// Calculates the SD of an array of floats passed in as a JSON array.
 ///
 /// # Safety
 /// The caller needs to ensure that `msg` is a valid pointer, and points to a slice with `msg_len` items
