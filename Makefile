@@ -5,7 +5,7 @@ CXX ?= clang++
 
 SRC_U = app/
 SRC_T = enclave/
-SRC_WASM= get-median-wasm/
+SRC_WASM= get-sd-wasm/
 
 # Compilation process, will call the appropriate makefiles.
 

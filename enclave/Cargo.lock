@@ -4,15 +4,15 @@ version = 3
 
 [[package]]
 name = "autocfg"
-version = "1.0.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
+checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "cc"
-version = "1.0.72"
+version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22a9137b95ea06864e018375b72adfb7db6e6f68cfc8df5a04d00288050485ee"
+checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
 
 [[package]]
 name = "downcast-rs"
@@ -23,13 +23,13 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 [[package]]
 name = "hashbrown_tstd"
 version = "0.11.2"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 
 [[package]]
 name = "libm"
-version = "0.2.1"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7d73b3f436185384286bd8098d17ec07c9a7d2388a6599f824d8502b529702a"
+checksum = "292a948cd991e376cf75541fe5b97a1081d713c618b4f1b9500f8844e49eb565"
 
 [[package]]
 name = "memory_units"
@@ -50,9 +50,9 @@ dependencies = [
 
 [[package]]
 name = "num-integer"
-version = "0.1.44"
+version = "0.1.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
+checksum = "225d3389fb3509a24c93f5c29eb6bde2586b98d9f016636dff58d7c6f7569cd9"
 dependencies = [
  "autocfg",
  "num-traits",
@@ -60,9 +60,9 @@ dependencies = [
 
 [[package]]
 name = "num-rational"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
+checksum = "0638a1c9d0a3c0914158145bc76cff373a75a627e6ecbfb71cbe6f453a5a19b0"
 dependencies = [
  "autocfg",
  "num-bigint",
@@ -72,9 +72,9 @@ dependencies = [
 
 [[package]]
 name = "num-traits"
-version = "0.2.14"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
+checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
 ]
@@ -86,14 +86,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be5e13c266502aadf83426d87d81a0f5d1ef45b8027f5a471c360abfe4bfae92"
 
 [[package]]
+name = "serde"
+version = "1.0.144"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f747710de3dcd43b88c9168773254e809d8ddbdf9653b84e2554ab219f17860"
+
+[[package]]
+name = "serde-json-wasm"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "042ac496d97e5885149d34139bad1d617192770d7eb8f1866da2317ff4501853"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "sgx_alloc"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 
 [[package]]
 name = "sgx_backtrace_sys"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "cc",
  "sgx_build_helper",
@@ -103,17 +118,17 @@ dependencies = [
 [[package]]
 name = "sgx_build_helper"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 
 [[package]]
 name = "sgx_demangle"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 
 [[package]]
 name = "sgx_libc"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_types",
 ]
@@ -121,7 +136,7 @@ dependencies = [
 [[package]]
 name = "sgx_serialize"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_tstd",
 ]
@@ -129,7 +144,7 @@ dependencies = [
 [[package]]
 name = "sgx_tcrypto"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_types",
 ]
@@ -137,7 +152,7 @@ dependencies = [
 [[package]]
 name = "sgx_tprotected_fs"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_trts",
  "sgx_types",
@@ -146,7 +161,7 @@ dependencies = [
 [[package]]
 name = "sgx_trts"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_libc",
  "sgx_types",
@@ -155,7 +170,7 @@ dependencies = [
 [[package]]
 name = "sgx_tse"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_types",
 ]
@@ -163,7 +178,7 @@ dependencies = [
 [[package]]
 name = "sgx_tseal"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_tcrypto",
  "sgx_trts",
@@ -174,7 +189,7 @@ dependencies = [
 [[package]]
 name = "sgx_tstd"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "hashbrown_tstd",
  "sgx_alloc",
@@ -190,12 +205,12 @@ dependencies = [
 [[package]]
 name = "sgx_types"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 
 [[package]]
 name = "sgx_unwind"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#565960cd7b4b36d1188459d75652619971c43f7e"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=e8a9fc22939befa27ff67f5509b2c2dfe8499945#e8a9fc22939befa27ff67f5509b2c2dfe8499945"
 dependencies = [
  "sgx_build_helper",
 ]
@@ -204,6 +219,7 @@ dependencies = [
 name = "template"
 version = "1.0.0"
 dependencies = [
+ "serde-json-wasm",
  "sgx_alloc",
  "sgx_libc",
  "sgx_serialize",
