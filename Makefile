@@ -5,7 +5,8 @@ CXX ?= clang++
 
 SRC_U = app/
 SRC_T = enclave/
-SRC_WASM= get-median-int-wasm/
+SRC_WASM_MED_INT= get-median-int-wasm/
+SRC_WASM_MED_FLOAT= get-median-float-wasm/
 
 # Compilation process, will call the appropriate makefiles.
 
@@ -21,12 +22,14 @@ enclave:
 
 wasm:
 	@echo "\033[32mRequest to compile the wasm part...\033[0m"
-	@make -C $(SRC_WASM)
+	@make -C $(SRC_WASM_MED_INT)
+	@make -C $(SRC_WASM_MED_FLOAT)
 
 clean:
 	@make -C $(SRC_U) clean
 	@make -C $(SRC_T) clean
-	@make -C $(SRC_WASM) clean
+	@make -C $(SRC_WASM_MED_INT) clean
+	@make -C $(SRC_WASM_MED_FLOAT) clean
 
 fclean:
 	@make -C $(SRC_U) fclean
