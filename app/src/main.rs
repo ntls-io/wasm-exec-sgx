@@ -22,7 +22,7 @@ use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::fs;
 
-static WASM_FILE: &str = "get_median.wasm";
+static WASM_FILE_MEDIAN_INT: &str = "get_median_int.wasm";
 
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
@@ -70,7 +70,7 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    let binary = fs::read(WASM_FILE).unwrap();
+    let binary = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
 
     let mut result_out = 0i32;
 

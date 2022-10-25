@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "get-median-wasm"
+name = "get-median-int-wasm"
 version = "0.1.0"
 dependencies = [
  "serde-json-wasm",

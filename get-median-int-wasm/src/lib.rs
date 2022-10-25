@@ -28,7 +28,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works_odd() {
+    fn median_int_works_odd() {
         let data = b"[8, 6, 3, 3, 7, 1, 9]";
 
         let res = unsafe { exec(data.as_ptr(), data.len() as u32) };
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn it_works_even() {
+    fn median_int_works_even() {
         let data = b"[5, 2, 3, 1, 7, 6, 4, 9]";
 
         let res = unsafe { exec(data.as_ptr(), data.len() as u32) };
