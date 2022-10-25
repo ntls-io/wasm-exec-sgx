@@ -8,6 +8,7 @@ SRC_T = enclave/
 SRC_WASM_MED_INT= get-median-int-wasm/
 SRC_WASM_MED_FLOAT= get-median-float-wasm/
 SRC_WASM_MEAN_INT= get-mean-int-wasm/
+SRC_WASM_MEAN_FLOAT= get-mean-float-wasm/
 
 # Compilation process, will call the appropriate makefiles.
 
@@ -26,6 +27,7 @@ wasm:
 	@make -C $(SRC_WASM_MED_INT)
 	@make -C $(SRC_WASM_MED_FLOAT)
 	@make -C $(SRC_WASM_MEAN_INT)
+	@make -C $(SRC_WASM_MEAN_FLOAT)
 
 clean:
 	@make -C $(SRC_U) clean
@@ -33,6 +35,7 @@ clean:
 	@make -C $(SRC_WASM_MED_INT) clean
 	@make -C $(SRC_WASM_MED_FLOAT) clean
 	@make -C $(SRC_WASM_MEAN_INT) clean
+	@make -C $(SRC_WASM_MEAN_FLOAT) clean
 
 fclean:
 	@make -C $(SRC_U) fclean

@@ -104,3 +104,27 @@ pub unsafe extern "C" fn exec_wasm_mean_int(
     };
     sgx_status_t::SGX_SUCCESS
 }
+
+/// # Safety
+/// The caller needs to ensure that `binary` is a valid pointer to a slice valid for `binary_len` items
+/// and that `result_out` is a valid pointer.
+#[no_mangle]
+pub unsafe extern "C" fn exec_wasm_mean_float(
+    binary: *const u8,
+    binary_len: usize,
+    result_out: *mut f64,
+) -> sgx_status_t {
+    if binary.is_null() {
+        return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
+    }
+    // Safety: SGX generated code will check that the pointer is valid.
+    let binary_slice = unsafe { slice::from_raw_parts(binary, binary_len) };
+    let data = b"[1.24,2.0,3.4,5.5,10.5]";
+    unsafe {
+        *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
+            Ok(Some(wasmi::RuntimeValue::F64(ret))) => ret.to_float(),
+            Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
+        }
+    };
+    sgx_status_t::SGX_SUCCESS
+}

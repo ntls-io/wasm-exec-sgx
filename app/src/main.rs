@@ -26,6 +26,7 @@ static WASM_FILE_MEDIAN_INT: &str = "get_median_int.wasm";
 static WASM_FILE_MEDIAN_FLOAT: &str = "get_median_float.wasm";
 
 static WASM_FILE_MEAN_INT: &str = "get_mean_int.wasm";
+static WASM_FILE_MEAN_FLOAT: &str = "get_mean_float.wasm";
 
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
@@ -53,6 +54,14 @@ extern "C" {
         binary: *const u8,
         binary_len: usize,
         result_out: *mut i32,
+    ) -> sgx_status_t;
+
+    fn exec_wasm_mean_float(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        binary: *const u8,
+        binary_len: usize,
+        result_out: *mut f64,
     ) -> sgx_status_t;
 
 }
@@ -94,11 +103,13 @@ fn main() {
     let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
 
     let binary_mean_int = fs::read(WASM_FILE_MEAN_INT).unwrap();
+    let binary_mean_float = fs::read(WASM_FILE_MEAN_FLOAT).unwrap();
 
     let mut result_out_median_int = 0i32;
     let mut result_out_median_float = 0f64;
 
     let mut result_out_mean_int = 0i32;
+    let mut result_out_mean_float = 0f64;
 
     let result = unsafe {
         exec_wasm_median_int(
@@ -123,6 +134,14 @@ fn main() {
             binary_mean_int.as_ptr(),
             binary_mean_int.len(),
             &mut result_out_mean_int,
+        );
+
+        exec_wasm_mean_float(
+            enclave.geteid(),
+            &mut retval,
+            binary_mean_float.as_ptr(),
+            binary_mean_float.len(),
+            &mut result_out_mean_float,
         )
     };
 
@@ -138,6 +157,7 @@ fn main() {
     println!("[+] ecall_test success, Median Float result -  {:?}", result_out_median_float);
     println!();
     println!("[+] ecall_test success, Mean Int result -  {:?}", result_out_mean_int);
+    println!("[+] ecall_test success, Mean Float result -  {:?}", result_out_mean_float);
 
     enclave.destroy();
 }
