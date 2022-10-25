@@ -7,14 +7,14 @@ use core::slice;
 /// # Safety
 /// The caller needs to ensure that `msg` is a valid pointer, and points to a slice with `msg_len` items
 #[no_mangle]
-pub unsafe extern "C" fn exec(msg: *const u8, msg_len: u32) -> f64 {
+pub unsafe extern "C" fn exec(msg: *const u8, msg_len: u32) -> f32 {
     let x = unsafe { slice::from_raw_parts(msg, msg_len as usize) };
 
     //TODO - Fix error handling
-    let val: Vec<f64> = serde_json_core::from_slice(&x).unwrap().0;
+    let val: Vec<f32> = serde_json_core::from_slice(&x).unwrap().0;
 
-    let sum: f64 = val.iter().sum();
-    sum as f64 / val.len() as f64
+    let sum: f32 = val.iter().sum();
+    sum as f32 / val.len() as f32
 }
 
 #[cfg(test)]

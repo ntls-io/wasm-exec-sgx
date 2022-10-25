@@ -45,7 +45,7 @@ extern "C" {
         retval: *mut sgx_status_t,
         binary: *const u8,
         binary_len: usize,
-        result_out: *mut f64,
+        result_out: *mut f32,
     ) -> sgx_status_t;
 
     fn exec_wasm_mean_int(
@@ -61,7 +61,7 @@ extern "C" {
         retval: *mut sgx_status_t,
         binary: *const u8,
         binary_len: usize,
-        result_out: *mut f64,
+        result_out: *mut f32,
     ) -> sgx_status_t;
 
 }
@@ -106,10 +106,10 @@ fn main() {
     let binary_mean_float = fs::read(WASM_FILE_MEAN_FLOAT).unwrap();
 
     let mut result_out_median_int = 0i32;
-    let mut result_out_median_float = 0f64;
+    let mut result_out_median_float = 0f32;
 
     let mut result_out_mean_int = 0i32;
-    let mut result_out_mean_float = 0f64;
+    let mut result_out_mean_float = 0f32;
 
     let result = unsafe {
         exec_wasm_median_int(

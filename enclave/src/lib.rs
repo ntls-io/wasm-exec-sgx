@@ -64,7 +64,7 @@ pub unsafe extern "C" fn exec_wasm_median_int(
 pub unsafe extern "C" fn exec_wasm_median_float(
     binary: *const u8,
     binary_len: usize,
-    result_out: *mut f64,
+    result_out: *mut f32,
 ) -> sgx_status_t {
     if binary.is_null() {
         return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
@@ -74,7 +74,7 @@ pub unsafe extern "C" fn exec_wasm_median_float(
     let data = b"[1.24,2.0,3.4,4.7,5.5,10.5]";
     unsafe {
         *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
-            Ok(Some(wasmi::RuntimeValue::F64(ret))) => ret.to_float(),
+            Ok(Some(wasmi::RuntimeValue::F32(ret))) => ret.to_float(),
             Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
         }
     };
@@ -112,7 +112,7 @@ pub unsafe extern "C" fn exec_wasm_mean_int(
 pub unsafe extern "C" fn exec_wasm_mean_float(
     binary: *const u8,
     binary_len: usize,
-    result_out: *mut f64,
+    result_out: *mut f32,
 ) -> sgx_status_t {
     if binary.is_null() {
         return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
@@ -122,7 +122,7 @@ pub unsafe extern "C" fn exec_wasm_mean_float(
     let data = b"[1.24,2.0,3.4,5.5,10.5]";
     unsafe {
         *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
-            Ok(Some(wasmi::RuntimeValue::F64(ret))) => ret.to_float(),
+            Ok(Some(wasmi::RuntimeValue::F32(ret))) => ret.to_float(),
             Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
         }
     };
