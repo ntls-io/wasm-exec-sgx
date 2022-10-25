@@ -37,7 +37,7 @@ use std::slice;
 /// The caller needs to ensure that `binary` is a valid pointer to a slice valid for `binary_len` items
 /// and that `result_out` is a valid pointer.
 #[no_mangle]
-pub unsafe extern "C" fn exec_wasm_test(
+pub unsafe extern "C" fn exec_wasm_median_int(
     binary: *const u8,
     binary_len: usize,
     result_out: *mut i32,

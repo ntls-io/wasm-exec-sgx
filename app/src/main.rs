@@ -28,13 +28,14 @@ static ENCLAVE_FILE: &str = "enclave.signed.so";
 
 extern "C" {
 
-    fn exec_wasm_test(
+    fn exec_wasm_median_int(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         binary: *const u8,
         binary_len: usize,
         result_out: *mut i32,
     ) -> sgx_status_t;
+
 }
 
 fn init_enclave() -> SgxResult<SgxEnclave> {
@@ -70,17 +71,17 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    let binary = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
+    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
 
-    let mut result_out = 0i32;
+    let mut result_out_median_int = 0i32;
 
     let result = unsafe {
-        exec_wasm_test(
+        exec_wasm_median_int(
             enclave.geteid(),
             &mut retval,
-            binary.as_ptr(),
-            binary.len(),
-            &mut result_out,
+            binary_median_int.as_ptr(),
+            binary_median_int.len(),
+            &mut result_out_median_int,
         )
     };
 
@@ -92,7 +93,7 @@ fn main() {
         }
     }
 
-    println!("[+] ecall_test success, result {:?}", result_out);
+    println!("[+] ecall_test success, result {:?}", result_out_median_int);
 
     enclave.destroy();
 }
