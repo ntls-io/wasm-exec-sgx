@@ -11,6 +11,7 @@ SRC_WASM_MEAN_INT= get-mean-int-wasm/
 SRC_WASM_MEAN_FLOAT= get-mean-float-wasm/
 SRC_WASM_SD_INT= get-sd-int-wasm/
 SRC_WASM_SD_FLOAT= get-sd-float-wasm/
+SRC_WASM_APPEND= wasm-append/
 
 # Compilation process, will call the appropriate makefiles.
 
@@ -32,6 +33,7 @@ wasm:
 	@make -C $(SRC_WASM_MEAN_FLOAT)
 	@make -C $(SRC_WASM_SD_INT)
 	@make -C $(SRC_WASM_SD_FLOAT)
+	@make -C $(SRC_WASM_APPEND)
 
 clean:
 	@make -C $(SRC_U) clean
@@ -42,6 +44,7 @@ clean:
 	@make -C $(SRC_WASM_MEAN_FLOAT) clean
 	@make -C $(SRC_WASM_SD_INT) clean
 	@make -C $(SRC_WASM_SD_FLOAT) clean
+	@make -C $(SRC_WASM_APPEND) clean
 
 fclean:
 	@make -C $(SRC_U) fclean

@@ -31,6 +31,8 @@ static WASM_FILE_MEAN_FLOAT: &str = "get_mean_float.wasm";
 static WASM_FILE_SD_INT: &str = "get_sd_int.wasm";
 static WASM_FILE_SD_FLOAT: &str = "get_sd_float.wasm";
 
+static WASM_FILE_APPEND: &str = "wasm_append.wasm";
+
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
 extern "C" {
@@ -83,6 +85,14 @@ extern "C" {
         result_out: *mut f32,
     ) -> sgx_status_t;
 
+    fn exec_wasm_append(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        binary: *const u8,
+        binary_len: usize,
+        result_out: *mut i32,
+    ) -> sgx_status_t;
+
 }
 
 fn init_enclave() -> SgxResult<SgxEnclave> {
@@ -127,6 +137,8 @@ fn main() {
     let binary_sd_int = fs::read(WASM_FILE_SD_INT).unwrap();
     let binary_sd_float = fs::read(WASM_FILE_SD_FLOAT).unwrap();
 
+    let binary_wasm_append = fs::read(WASM_FILE_APPEND).unwrap();
+
     let mut result_out_median_int = 0i32;
     let mut result_out_median_float = 0f32;
 
@@ -135,6 +147,8 @@ fn main() {
 
     let mut result_out_sd_int = 0f32;
     let mut result_out_sd_float = 0f32;
+
+    let mut result_append_out = 0i32;
 
     let result = unsafe {
         exec_wasm_median_int(
@@ -183,6 +197,14 @@ fn main() {
             binary_sd_float.as_ptr(),
             binary_sd_float.len(),
             &mut result_out_sd_float,
+        );
+
+        exec_wasm_append(
+            enclave.geteid(),
+            &mut retval,
+            binary_wasm_append.as_ptr(),
+            binary_wasm_append.len(),
+            &mut result_append_out,
         )
     };
 
@@ -202,6 +224,8 @@ fn main() {
     println!();
     println!("[+] ecall_test success, SD Int result -  {:?}", result_out_sd_int);
     println!("[+] ecall_test success, SD Float result -  {:?}", result_out_sd_float);
+    println!();
+    println!("[+] ecall_test success, WASM Append successful -  {:?}", result_append_out);
 
     enclave.destroy();
 }
