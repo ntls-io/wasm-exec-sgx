@@ -95,48 +95,50 @@ use the convenience scripts provided at [rust-sgx-sdk-env].
 
 2. Install prereq libraries and Docker
 
-sudo apt-get install make cmake clang autoconf libtool
+`sudo apt-get install make cmake clang autoconf libtool`
 
 ### Install docker
-https://docs.docker.com/engine/install/ubuntu/
+[https://docs.docker.com/engine/install/ubuntu/](https://docs.docker.com/engine/install/ubuntu/)
 In order to run the scripts as a non-root user, follow the docker-postinstall
-https://docs.docker.com/engine/install/linux-postinstall/
+[https://docs.docker.com/engine/install/linux-postinstall/](https://docs.docker.com/engine/install/ubuntu/)
 
 ### Install Rust
 Install rustup as described at https://rustup.rs and set nightly as the default toolchain
-rustup install nightly
-rustup default nightly
+`rustup install nightly`
+`rustup default nightly`
 
 
 #### Install the driver, linux-sgx-driver, download and install as above 
 Install SGX driver
-Follow https://github.com/intel/linux-sgx-driver
+Follow [https://github.com/intel/linux-sgx-driver](https://docs.docker.com/engine/install/ubuntu/)
 **OR** 
-wget https://download.01.org/intel-sgx/sgx-linux/2.11/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.6.0_b0a445b.bin
-sudo ./sgx_linux_x64_driver_2.6.0_b0a445b.bin
+`wget https://download.01.org/intel-sgx/sgx-linux/2.11/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.6.0_b0a445b.bin`
+`sudo ./sgx_linux_x64_driver_2.6.0_b0a445b.bin`
 
 Then check that the folder exists:
-ls /dev/isgx
+`ls /dev/isgx`
 
 ### Install the Linux SGX SDK
 
 Source: https://github.com/apache/incubator-teaclave-sgx-sdk/tree/a6a172e652b4db4eaa17e4faa078fda8922abdd0
 
-git clone https://github.com/apache/incubator-teaclave-sgx-sdk.git
+`git clone https://github.com/apache/incubator-teaclave-sgx-sdk.git`
 
-sudo docker pull baiduxlab/sgx-rust:1804-1.1.3
+`sudo docker pull baiduxlab/sgx-rust:1804-1.1.3`
 
 #### Replace the teaclave path with the right one
-TEACLAVE_PATH="/home/ubuntu/incubator-teaclave-sgx-sdk"
-sudo docker run -v {TEACLAVE_PATH}:/root/sgx -ti --device /dev/isgx baiduxlab/sgx-rust:1804-1.1.3
+`TEACLAVE_PATH="/home/ubuntu/incubator-teaclave-sgx-sdk"`
+`sudo docker run -v {TEACLAVE_PATH}:/root/sgx -ti --device /dev/isgx baiduxlab/sgx-rust:1804-1.1.3`
 
 **OR** to run in simulation mode
-docker run -v /home/jbochenek/code/incubator-teaclave-sgx-sdk:/root/sgx -ti baiduxlab/sgx-rust:2004-1.1.3
+`docker run -v /home/jbochenek/code/incubator-teaclave-sgx-sdk:/root/sgx -ti baiduxlab/sgx-rust:2004-1.1.3`
 
 #### Set aesm libraries and start the service EVERY TIME 
-LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm/ /opt/intel/sgx-aesm-service/aesm/aesm_service &
+`LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm/ /opt/intel/sgx-aesm-service/aesm/aesm_service &`
 
 #### Run the sample code
+```
 root@docker:~/sgx/samplecode/helloworld# make
 root@docker:~/sgx/samplecode/helloworld# cd bin
 root@docker:~/sgx/samplecode/helloworld/bin# ./app
+```
