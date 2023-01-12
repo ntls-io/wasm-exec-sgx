@@ -22,15 +22,13 @@
 #![deny(clippy::mem_forget)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-extern crate sgx_types;
 #[cfg(not(target_env = "sgx"))]
-#[macro_use]
 extern crate sgx_tstd as std;
+extern crate sgx_types;
 extern crate wasmi;
 extern crate wasmi_impl;
 
 use sgx_types::*;
-use std::io::{self, Write};
 use std::slice;
 
 /// # Safety
