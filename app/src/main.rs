@@ -22,7 +22,7 @@ use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::fs;
 
-static WASM_FILE: &str = "get_median.wasm";
+static WASM_FILE: &str = "get_mean.wasm";
 
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
@@ -33,7 +33,7 @@ extern "C" {
         retval: *mut sgx_status_t,
         binary: *const u8,
         binary_len: usize,
-        result_out: *mut i32,
+        result_out: *mut f64,
     ) -> sgx_status_t;
 }
 
@@ -72,7 +72,7 @@ fn main() {
 
     let binary = fs::read(WASM_FILE).unwrap();
 
-    let mut result_out = 0i32;
+    let mut result_out = 0f64;
 
     let result = unsafe {
         exec_wasm_test(
