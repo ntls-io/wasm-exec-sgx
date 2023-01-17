@@ -32,6 +32,7 @@ enclave {
         public sgx_status_t exec_wasm_mean_float([in, count=binary_len] const uint8_t* binary_mean_float, size_t binary_len, [out] float* result_out_mean_float);
         public sgx_status_t exec_wasm_sd_int([in, count=binary_len] const uint8_t* binary_sd_int, size_t binary_len, [out] float* result_out_sd_int);
         public sgx_status_t exec_wasm_sd_float([in, count=binary_len] const uint8_t* binary_sd_float, size_t binary_len, [out] float* result_out_sd_float);
+        public sgx_status_t exec_wasm_append([in, count=binary_len] const uint8_t* binary_wasm_append, size_t binary_len, [out] int32_t* result_wasm_append);
     };
     untrusted
     {

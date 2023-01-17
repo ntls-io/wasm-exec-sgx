@@ -5,6 +5,7 @@ use wasmi::{
 };
 
 static ENTRYPOINT: &str = "exec";
+static ENTRYPOINT_APPEND: &str = "exec_append";
 
 #[derive(Debug)]
 pub enum ExecWasmError {
@@ -15,6 +16,32 @@ impl From<wasmi::Error> for ExecWasmError {
     fn from(err: wasmi::Error) -> Self {
         Self::WasmiError(err)
     }
+}
+
+pub fn exec_wasm_append_data(
+    binary: &[u8],
+    data: &[u8],
+    data_2: &[u8],
+) -> Result<Option<RuntimeValue>, ExecWasmError> {
+    let module = wasmi::Module::from_buffer(binary)?;
+
+    // TODO: Calculate the memory size always be larger than `data`
+    let mem_instance = MemoryInstance::alloc(Pages(1000), None)?;
+
+    // TODO: Error Handling
+    mem_instance.set(0, data).unwrap();
+    mem_instance.set(data.len() as u32, data_2).unwrap();
+
+    let imports = [ExternVal::Memory(mem_instance)];
+
+    // TODO: This panics. We probably want to run start functions
+    let instance = ModuleInstance::with_externvals(&module, imports.iter())?.assert_no_start();
+
+    Ok(instance.invoke_export(
+        ENTRYPOINT_APPEND,
+        &[RuntimeValue::I32(0), RuntimeValue::I32(data.len() as i32), RuntimeValue::I32(data.len() as i32), RuntimeValue::I32(data_2.len() as i32)],
+        &mut NopExternals,
+    )?)
 }
 
 pub fn exec_wasm_with_data(
