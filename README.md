@@ -1,4 +1,12 @@
-# NTC - WASM component
+# NTC - Execution Enclave and Service Development Repo
+
+This repo serves as the development repo for the Exeuction Service and Execution Enclave for NTC.
+The `app` directoy represents the execution service. 
+The `enclave` directory represents the execution enclave. 
+The `get-**-wasm` files represent rust code binaries.
+The `wasmi-impl` represents a wasm binary compiler to convert and run the rust binaries to wasm code. 
+
+## Installation
 
 ### Requirements
 
@@ -42,7 +50,7 @@ The Rust and Intel SGX SDKs need to be installed and the
 relevant environment variables need to be set.  In order to facilitate this, we
 use the convenience scripts provided at [rust-sgx-sdk-env].
 
-1. Make sure the `docker` daemon is running, otherwise start it with
+1. Make sure docker is installed and the `docker` daemon is running, otherwise install following these steps -  [docker_install], once installed you can check the docker is up by running this code:
    ```
    $ systemctl start snap.docker.dockerd
    ```
@@ -73,7 +81,7 @@ use the convenience scripts provided at [rust-sgx-sdk-env].
     $ git clone https://github.com/ntls-io/wasm-exec-sgx
     ```
    and `cd` into it.
-3. Run `make all` to compile the entire project.
+3. Run `make` to compile the entire project.
 4. To run the main application, change to bin/ and execute the following:
      ```
     ./app
@@ -86,3 +94,4 @@ use the convenience scripts provided at [rust-sgx-sdk-env].
 
 [docker-postinstall]: https://docs.docker.com/engine/install/linux-postinstall/
 [rust-sgx-sdk-env]: https://github.com/PiDelport/rust-sgx-sdk-dev-env
+[docker-install]: https://docs.docker.com/engine/install/ubuntu/

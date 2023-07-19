@@ -3,7 +3,7 @@ SRC_WASM = ./
 SRC_RST = ./src/
 BIN = ../bin/
 APP_WASM = get_sd_int.wasm
-BIN_WASM = $(addprefix $(BIN), $(APP_WASM))
+BIN_WASM = $(addprefix $(BIN),$(APP_WASM))
 FILES_RUST_F= $(wildcard $(SRC_RST)*.rs) # Wildcard function used, no need to specify the rust files. Safe as we don't compile the rust files with the makefile.
 TOML = Cargo.toml
 all: $(BIN_WASM)
