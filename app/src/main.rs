@@ -45,6 +45,8 @@ extern "C" {
     fn exec_wasm_median_int(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
+        data_in: *const u8,
+        data_len: usize,
         binary: *const u8,
         binary_len: usize,
         result_out: *mut i32,
@@ -53,6 +55,8 @@ extern "C" {
     fn exec_wasm_median_float(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
+        data_in: *const u8,
+        data_len: usize,
         binary: *const u8,
         binary_len: usize,
         result_out: *mut f32,
@@ -167,11 +171,26 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    // Median test
-    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
+    //// Median test
+    // Float
+    let data_median_float = read_data_from_json_float(
+        "/root/workspace/wasm-exec-sgx/get-median-float-wasm/test_data.json",
+        "median_float_works_odd",
+    )
+    .unwrap();
+    let serialized_data_median_float: Vec<u8> = serde_json::to_vec(&data_median_float).unwrap(); // Create a new byte array that holds the serialized JSON data
     let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
-    let mut result_out_median_int = 0i32;
     let mut result_out_median_float = 0f32;
+
+    // Int
+    let data_median_int = read_data_from_json_int(
+        "/root/workspace/wasm-exec-sgx/get-median-int-wasm/test_data.json",
+        "median_int_works_odd",
+    )
+    .unwrap();
+    let serialized_data_median_int: Vec<u8> = serde_json::to_vec(&data_median_int).unwrap(); // Create a new byte array that holds the serialized JSON data
+    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
+    let mut result_out_median_int = 0i32;
 
     //// Mean test
     // Float
@@ -204,6 +223,8 @@ fn main() {
         exec_wasm_median_int(
             enclave.geteid(),
             &mut retval,
+            serialized_data_median_int.as_ptr(),
+            serialized_data_median_int.len(),
             binary_median_int.as_ptr(),
             binary_median_int.len(),
             &mut result_out_median_int,
@@ -212,6 +233,8 @@ fn main() {
         exec_wasm_median_float(
             enclave.geteid(),
             &mut retval,
+            serialized_data_median_float.as_ptr(),
+            serialized_data_median_float.len(),
             binary_median_float.as_ptr(),
             binary_median_float.len(),
             &mut result_out_median_float,
