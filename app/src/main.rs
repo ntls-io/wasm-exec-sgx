@@ -171,6 +171,7 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
+<<<<<<< HEAD
     //// Median test
     // Float
     let data_median_float = read_data_from_json_float(
@@ -190,6 +191,11 @@ fn main() {
     .unwrap();
     let serialized_data_median_int: Vec<u8> = serde_json::to_vec(&data_median_int).unwrap(); // Create a new byte array that holds the serialized JSON data
     let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
+=======
+    // Median test
+    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
+    let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
+>>>>>>> feat: read in json files execute over MEAN float/int wasms
     let mut result_out_median_int = 0i32;
 
     //// Mean test
