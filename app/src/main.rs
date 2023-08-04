@@ -19,6 +19,7 @@ extern crate sgx_types;
 extern crate sgx_urts;
 extern crate wabt;
 use serde_json::Error;
+use serde_json::Error;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 
@@ -171,41 +172,8 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-<<<<<<< HEAD
-    //// Median test
-    // Float
-    let data_median_float = read_data_from_json_float(
-        "/root/workspace/wasm-exec-sgx/get-median-float-wasm/test_data.json",
-        "median_float_works_odd",
-    )
-    .unwrap();
-    let serialized_data_median_float: Vec<u8> = serde_json::to_vec(&data_median_float).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
-    let mut result_out_median_float = 0f32;
-
-    // Int
-    let data_median_int = read_data_from_json_int(
-        "/root/workspace/wasm-exec-sgx/get-median-int-wasm/test_data.json",
-        "median_int_works_odd",
-    )
-    .unwrap();
-    let serialized_data_median_int: Vec<u8> = serde_json::to_vec(&data_median_int).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
-=======
-    // Median test
     let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
     let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
->>>>>>> feat: read in json files execute over MEAN float/int wasms
-
-    // Int
-    let data_median_int = read_data_from_json_int(
-        "/root/workspace/wasm-exec-sgx/get-median-int-wasm/test_data.json",
-        "median_int_works_odd",
-    )
-    .unwrap();
-    let serialized_data_median_int: Vec<u8> = serde_json::to_vec(&data_median_int).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
-    let mut result_out_median_int = 0i32;
 
     //// Mean test
     // Float
