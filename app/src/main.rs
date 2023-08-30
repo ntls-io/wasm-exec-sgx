@@ -19,7 +19,6 @@ extern crate sgx_types;
 extern crate sgx_urts;
 extern crate wabt;
 use serde_json::Error;
-use serde_json::Error;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 
@@ -30,31 +29,16 @@ use std::{
     io::Read,
 };
 
-static WASM_FILE_MEDIAN_INT: &str = "get_median_int.wasm";
-static WASM_FILE_MEDIAN_FLOAT: &str = "get_median_float.wasm";
+static WASM_FILE_MEDIAN: &str = "get_median_int.wasm";
 
-static WASM_FILE_MEAN_INT: &str = "get_mean_int.wasm";
-static WASM_FILE_MEAN_FLOAT: &str = "get_mean_float.wasm";
+static WASM_FILE_MEAN: &str = "get_mean_wasm.wasm";
 
-static WASM_FILE_SD_INT: &str = "get_sd_int.wasm";
-static WASM_FILE_SD_FLOAT: &str = "get_sd_float.wasm";
+static WASM_FILE_SD: &str = "get_sd_wasm.wasm";
 
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
 extern "C" {
-
-    fn exec_wasm_median_int(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        data_in: *const u8,
-        data_len: usize,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut i32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_median_float(
-        eid: sgx_enclave_id_t,
+    fn exec_wasm(eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         data_in: *const u8,
         data_len: usize,
@@ -62,43 +46,6 @@ extern "C" {
         binary_len: usize,
         result_out: *mut f32,
     ) -> sgx_status_t;
-
-    fn exec_wasm_mean_int(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        data_in: *const u8,
-        data_len: usize,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut i32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_mean_float(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        data_in: *const u8,
-        data_len: usize,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_sd_int(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_sd_float(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
 }
 
 fn init_enclave() -> SgxResult<SgxEnclave> {
@@ -121,7 +68,7 @@ fn init_enclave() -> SgxResult<SgxEnclave> {
 }
 
 /// Read data from the JSON file and parse it into a vector of ints.
-fn read_data_from_json_float(file_path: &str, array_name: &str) -> Result<Vec<f32>, Error> {
+fn read_data_from_json(file_path: &str, array_name: &str) -> Result<Vec<f32>, Error> {
     let path = Path::new(file_path);
     let mut file = File::open(&path).unwrap();
     let mut data = String::new();
@@ -134,25 +81,6 @@ fn read_data_from_json_float(file_path: &str, array_name: &str) -> Result<Vec<f3
     let data_vec: Vec<f32> = array_data
         .iter()
         .map(|v| v.as_f64().unwrap() as f32)
-        .collect();
-
-    Ok(data_vec)
-}
-
-/// Read data from the JSON file and parse it into a vector of ints.
-fn read_data_from_json_int(file_path: &str, array_name: &str) -> Result<Vec<i32>, Error> {
-    let path = Path::new(file_path);
-    let mut file = File::open(&path).unwrap();
-    let mut data = String::new();
-    file.read_to_string(&mut data).unwrap();
-
-    let json_data: serde_json::Value = serde_json::from_str(&data)?;
-
-    let array_data = json_data[array_name].as_array().unwrap();
-
-    let data_vec: Vec<i32> = array_data
-        .iter()
-        .map(|v| v.as_i64().unwrap() as i32)
         .collect();
 
     Ok(data_vec)
@@ -172,91 +100,67 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
-    let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
-
     //// Mean test
-    // Float
-    let data_mean_float = read_data_from_json_float(
-        "/root/workspace/wasm-exec-sgx/get-mean-float-wasm/test_data.json",
-        "mean_float_works",
+    // Numbers float and integer mixed
+     let data_median = read_data_from_json(
+        "/root/workspace/wasm-exec-sgx/get-median-wasm/test_data.json",
+        "median_int_works_odd",
     )
     .unwrap();
-    let serialized_data_mean_float: Vec<u8> = serde_json::to_vec(&data_mean_float).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_mean_float = fs::read(WASM_FILE_MEAN_FLOAT).unwrap();
-    let mut result_out_mean_float = 0f32;
+    let serialized_data_median: Vec<u8> = serde_json::to_vec(&data_median).unwrap(); // Create a new byte array that holds the serialized JSON data
+    let binary_median = fs::read(WASM_FILE_MEDIAN).unwrap();
+    let mut result_out_median = 0f32;
 
-    // Int
-    let data_mean_int = read_data_from_json_int(
-        "/root/workspace/wasm-exec-sgx/get-mean-int-wasm/test_data.json",
+    //// Mean test
+    // Numbers float and integer mixed
+    let data_mean = read_data_from_json(
+        "/root/workspace/wasm-exec-sgx/get-mean-wasm/test_data.json",
         "mean_int_works",
     )
     .unwrap();
-    let serialized_data_mean_int: Vec<u8> = serde_json::to_vec(&data_mean_int).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_mean_int = fs::read(WASM_FILE_MEAN_INT).unwrap();
-    let mut result_out_mean_int = 0i32;
+    let serialized_data_mean: Vec<u8> = serde_json::to_vec(&data_mean).unwrap(); // Create a new byte array that holds the serialized JSON data
+    let binary_mean = fs::read(WASM_FILE_MEAN).unwrap();
+    let mut result_out_mean = 0f32;
 
     // Sd test
-    let binary_sd_int = fs::read(WASM_FILE_SD_INT).unwrap();
-    let binary_sd_float = fs::read(WASM_FILE_SD_FLOAT).unwrap();
-    let mut result_out_sd_int = 0f32;
-    let mut result_out_sd_float = 0f32;
+    // Numbers float and integer mixed
+    let data_sd = read_data_from_json(
+        "/root/workspace/wasm-exec-sgx/get-sd-wasm/test_data.json",
+        "sd_data",
+    )
+    .unwrap();
+    let serialized_data_sd: Vec<u8> = serde_json::to_vec(&data_sd).unwrap(); // Create a new byte array that holds the serialized JSON data
+    let binary_sd = fs::read(WASM_FILE_SD).unwrap();
+    let mut result_out_sd = 0f32;
+   
 
     let result = unsafe {
-        exec_wasm_median_int(
+        exec_wasm(
             enclave.geteid(),
             &mut retval,
-            serialized_data_median_int.as_ptr(),
-            serialized_data_median_int.len(),
-            binary_median_int.as_ptr(),
-            binary_median_int.len(),
-            &mut result_out_median_int,
+            serialized_data_median.as_ptr(),
+            serialized_data_median.len(),
+            binary_median.as_ptr(),
+            binary_median.len(),
+            &mut result_out_median,
         );
-
-        exec_wasm_median_float(
+        exec_wasm(
             enclave.geteid(),
             &mut retval,
-            serialized_data_median_float.as_ptr(),
-            serialized_data_median_float.len(),
-            binary_median_float.as_ptr(),
-            binary_median_float.len(),
-            &mut result_out_median_float,
+            serialized_data_mean.as_ptr(),
+            serialized_data_mean.len(),
+            binary_mean.as_ptr(),
+            binary_mean.len(),
+            &mut result_out_mean,
         );
-
-        exec_wasm_mean_int(
+        exec_wasm(
             enclave.geteid(),
             &mut retval,
-            serialized_data_mean_int.as_ptr(),
-            serialized_data_mean_int.len(),
-            binary_mean_int.as_ptr(),
-            binary_mean_int.len(),
-            &mut result_out_mean_int,
-        );
-
-        exec_wasm_mean_float(
-            enclave.geteid(),
-            &mut retval,
-            serialized_data_mean_float.as_ptr(),
-            serialized_data_mean_float.len(),
-            binary_mean_float.as_ptr(),
-            binary_mean_float.len(),
-            &mut result_out_mean_float,
-        );
-
-        exec_wasm_sd_int(
-            enclave.geteid(),
-            &mut retval,
-            binary_sd_int.as_ptr(),
-            binary_sd_int.len(),
-            &mut result_out_sd_int,
-        );
-
-        exec_wasm_sd_float(
-            enclave.geteid(),
-            &mut retval,
-            binary_sd_float.as_ptr(),
-            binary_sd_float.len(),
-            &mut result_out_sd_float,
+            serialized_data_sd.as_ptr(),
+            serialized_data_sd.len(),
+            binary_sd.as_ptr(),
+            binary_sd.len(),
+            &mut result_out_sd,
         )
     };
 
@@ -269,30 +173,20 @@ fn main() {
     }
 
     println!(
-        "[+] ecall_test success, Median Int result -  {:?}",
-        result_out_median_int
+        "[+] ecall_test success, Median result -  {:?}",
+        result_out_median
     );
-    println!(
-        "[+] ecall_test success, Median Float result -  {:?}",
-        result_out_median_float
-    );
+
     println!();
     println!(
-        "[+] ecall_test success, Mean Int result -  {:?}",
-        result_out_mean_int
+        "[+] ecall_test success, Mean result -  {:?}",
+        result_out_mean
     );
-    println!(
-        "[+] ecall_test success, Mean Float result -  {:?}",
-        result_out_mean_float
-    );
+
     println!();
     println!(
-        "[+] ecall_test success, SD Int result -  {:?}",
-        result_out_sd_int
-    );
-    println!(
-        "[+] ecall_test success, SD Float result -  {:?}",
-        result_out_sd_float
+        "[+] ecall_test success, SD result -  {:?}",
+        result_out_sd
     );
 
     enclave.destroy();
