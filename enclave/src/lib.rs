@@ -49,7 +49,9 @@ pub unsafe extern "C" fn exec_wasm(
     }
     // Safety: SGX generated code will check that the pointer is valid.
     let binary_slice = unsafe { slice::from_raw_parts(binary, binary_len) };
+    println!{"enclave: binary slice {:?}", &binary_slice}
     let data = unsafe { slice::from_raw_parts(data_in, data_len) };
+    println!{"enclave: data {:?}", &data}
     unsafe {
         *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
             Ok(Some(wasmi::RuntimeValue::F32(ret))) => ret.to_float(),

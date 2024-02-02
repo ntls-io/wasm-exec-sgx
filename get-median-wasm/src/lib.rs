@@ -23,7 +23,7 @@ pub unsafe extern "C" fn exec(msg: *const u8, msg_len: u32) -> f32 {
             eprintln!("Error deserializing JSON: {}", err);
             // Return a default value or handle the error appropriately.
             // For simplicity, let's return 0.
-            return 0.0;
+            return 2.0;
         }
     };
 
@@ -44,7 +44,7 @@ pub unsafe extern "C" fn exec(msg: *const u8, msg_len: u32) -> f32 {
 
     let val_len = float_vals.len();
     if val_len == 0 {
-        return 0.0;
+        return 3.0;
     }
     if val_len % 2 == 0 {
         let mid = val_len / 2;

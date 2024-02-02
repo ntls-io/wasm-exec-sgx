@@ -28,8 +28,10 @@ use std::{
     fs::{self, File},
     io::Read,
 };
+use std::env;
+use std::path::PathBuf;
 
-static WASM_FILE_MEDIAN: &str = "get_median_int.wasm";
+static WASM_FILE_MEDIAN: &str = "get_median_wasm.wasm";
 
 static WASM_FILE_MEAN: &str = "get_mean_wasm.wasm";
 
@@ -86,6 +88,20 @@ fn read_data_from_json(file_path: &str, array_name: &str) -> Result<Vec<f32>, Er
     Ok(data_vec)
 }
 
+// Helper function to create a path for JSON files
+fn create_json_path(relative_path: &str) -> String {
+    let current_dir = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            eprintln!("Failed to get current directory: {}", e);
+            panic!("Cannot continue without a current directory.");
+        }
+    };
+    let parent_dir = current_dir.join("..");
+    let full_path = parent_dir.join(relative_path);
+    full_path.to_str().unwrap().to_string()
+}
+
 fn main() {
     let enclave = match init_enclave() {
         Ok(r) => {
@@ -100,39 +116,26 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    //// Mean test
+    let current_dir = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            eprintln!("Failed to get current directory: {}", e);
+            return;
+        }
+    };
+    //// Median test
     // Numbers float and integer mixed
-     let data_median = read_data_from_json(
-        "/root/workspace/wasm-exec-sgx/get-median-wasm/test_data.json",
+    let median_json_path = create_json_path("get-median-wasm/test_data.json");
+    let data_median = read_data_from_json(
+        &median_json_path,
         "median_int_works_odd",
     )
     .unwrap();
     let serialized_data_median: Vec<u8> = serde_json::to_vec(&data_median).unwrap(); // Create a new byte array that holds the serialized JSON data
+    println!("serialised data median {:?}",&serialized_data_median);
     let binary_median = fs::read(WASM_FILE_MEDIAN).unwrap();
+    println!{"{:?}", &binary_median};
     let mut result_out_median = 0f32;
-
-    //// Mean test
-    // Numbers float and integer mixed
-    let data_mean = read_data_from_json(
-        "/root/workspace/wasm-exec-sgx/get-mean-wasm/test_data.json",
-        "mean_int_works",
-    )
-    .unwrap();
-    let serialized_data_mean: Vec<u8> = serde_json::to_vec(&data_mean).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_mean = fs::read(WASM_FILE_MEAN).unwrap();
-    let mut result_out_mean = 0f32;
-
-    // Sd test
-    // Numbers float and integer mixed
-    let data_sd = read_data_from_json(
-        "/root/workspace/wasm-exec-sgx/get-sd-wasm/test_data.json",
-        "sd_data",
-    )
-    .unwrap();
-    let serialized_data_sd: Vec<u8> = serde_json::to_vec(&data_sd).unwrap(); // Create a new byte array that holds the serialized JSON data
-    let binary_sd = fs::read(WASM_FILE_SD).unwrap();
-    let mut result_out_sd = 0f32;
-   
 
     let result = unsafe {
         exec_wasm(
@@ -143,24 +146,6 @@ fn main() {
             binary_median.as_ptr(),
             binary_median.len(),
             &mut result_out_median,
-        );
-        exec_wasm(
-            enclave.geteid(),
-            &mut retval,
-            serialized_data_mean.as_ptr(),
-            serialized_data_mean.len(),
-            binary_mean.as_ptr(),
-            binary_mean.len(),
-            &mut result_out_mean,
-        );
-        exec_wasm(
-            enclave.geteid(),
-            &mut retval,
-            serialized_data_sd.as_ptr(),
-            serialized_data_sd.len(),
-            binary_sd.as_ptr(),
-            binary_sd.len(),
-            &mut result_out_sd,
         )
     };
 
@@ -175,18 +160,6 @@ fn main() {
     println!(
         "[+] ecall_test success, Median result -  {:?}",
         result_out_median
-    );
-
-    println!();
-    println!(
-        "[+] ecall_test success, Mean result -  {:?}",
-        result_out_mean
-    );
-
-    println!();
-    println!(
-        "[+] ecall_test success, SD result -  {:?}",
-        result_out_sd
     );
 
     enclave.destroy();
