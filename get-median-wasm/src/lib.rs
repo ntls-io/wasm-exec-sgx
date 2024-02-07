@@ -1,126 +1,80 @@
+
 #![deny(clippy::mem_forget)]
 #![deny(unsafe_op_in_unsafe_fn)]
 use core::slice;
-use serde_json::Value;
+use serde_json::{Value, json};
 
-/// Calculates the median of an array of numbers passed in as a JSON array.
+/// Calculates the median of an array of numbers.
 /// Numbers could be floats or integers.
-/// Return value will be a float.
-///
-/// # Safety
-/// The caller needs to ensure that `msg` is a valid pointer, and points to a slice with `msg_len` items
+/// Return a pointer to an array of results in linear memory.
 #[no_mangle]
-pub unsafe extern "C" fn exec(msg: *const u8, msg_len: u32) -> f32 {
-    // Print the received data and msg_len to verify their values
-    println!("Received data: {:?}", unsafe {
-        std::slice::from_raw_parts(msg, msg_len as usize)
-    });
-    println!("Received msg_len: {}", msg_len);
-    let x = unsafe { slice::from_raw_parts(msg, msg_len as usize) };
-    let mut val: Vec<Value> = match serde_json::from_slice(&x) {
-        Ok(val) => val,
-        Err(err) => {
-            eprintln!("Error deserializing JSON: {}", err);
-            // Return a default value or handle the error appropriately.
-            // For simplicity, let's return 0.
-            return 2.0;
-        }
-    };
+pub unsafe extern "C" fn exec(data: *const u8, len: u32) -> *const f32 {
+    let data_slice = unsafe { slice::from_raw_parts(data, len as usize) };
+    let json_data: Value = serde_json::from_slice(data_slice).unwrap();
+    let columns = json_data.as_object().unwrap();
 
-        // Convert integers and floats to floats
-    let mut float_vals: Vec<f32> = val
-        .iter()
-        .filter_map(|v| match v {
-            Value::Number(n) => Some(
-                n.as_f64()
-                    .expect("Failed to convert number to f64") as f32
-            ),
-            _ => None,
-        })
-        .collect();
+    let mut results = Vec::new();
+    for (_column_name, values) in columns {
+        let mut numbers: Vec<f32> = values.as_array().unwrap()
+            .iter()
+            .map(|v| v.as_f64().unwrap() as f32)
+            .collect();
 
-
-    float_vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-    let val_len = float_vals.len();
-    if val_len == 0 {
-        return 3.0;
+        numbers.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let median = if numbers.len() % 2 == 0 {
+            let mid = numbers.len() / 2;
+            (numbers[mid - 1] + numbers[mid]) / 2.0
+        } else {
+            numbers[numbers.len() / 2]
+        };
+        results.push(median);
     }
-    if val_len % 2 == 0 {
-        let mid = val_len / 2;
-        (float_vals[mid - 1] + float_vals[mid]) / 2.0
-    } else {
-        let mid = (val_len + 1) / 2;
-        float_vals[mid - 1]
-    }
+
+    // Allocate memory in the Wasm module's linear memory to store the results.
+    let result_ptr = results.as_ptr();
+    std::mem::forget(results); // Prevent deallocation
+    result_ptr
 }
 
+// Tests and other module definitions...
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::Error;
-    use std::env;
-    use std::fs::File;
-    use std::io::Read;
+    use serde_json::{Value, json};
+    use std::fs;
+    use std::path::PathBuf;
 
-    /// Read data from the JSON file and parse it into a vector of floats.
-    fn read_data_from_json(test_name: &str) -> Result<Vec<i32>, Error> {
-        let mut current_dir = env::current_dir().unwrap();
-        current_dir.push("test_data.json");
-        println!("{:?}", current_dir);
-        let mut file = File::open(&current_dir).unwrap();
-        let mut data = String::new();
-        file.read_to_string(&mut data).unwrap();
-        println!("Raw JSON data for {}: {}", test_name, data);
-
-        let json_data: serde_json::Value = serde_json::from_str(&data)?;
-
-        // Check if the JSON data is correctly parsed
-        println!("Parsed JSON data: {:?}", json_data);
-
-        let test_data = json_data[test_name].as_array().unwrap();
-        println!("Test data: {:?}", test_data);
-
-        let data_vec: Vec<i32> = test_data
-            .iter()
-            .map(|v| v.as_i64().unwrap() as i32)
-            .collect();
-        println!("Parsed data: {:?}", data_vec);
-
-        Ok(data_vec)
+    /// Function to read the JSON file and serialize the data
+    fn read_and_serialize_json(file_name: &str) -> Vec<u8> {
+        // Construct the path to the JSON file
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        println!("{:?}", &path);
+        path.push(file_name);
+        println!("{:?}", &path);
+        // Read the JSON file
+        let json_str = fs::read_to_string(path)
+            .expect("Failed to read JSON file");
+        println!("{:?}", &json_str);
+        // Serialize the JSON string into bytes
+        json_str.into_bytes()
     }
 
     #[test]
-    fn median_int_works_odd() {
-        let data = read_data_from_json("median_int_works_odd").unwrap();
-        println!("{:?}", data);
+        #[test]
+    fn test_wasm_binary() {
+        let json_data = read_and_serialize_json("test.json");
 
-        // Ensure that the data vector has the correct size
-        assert_eq!(data.len(), 7);
+        // Directly use the exec function
+        let result_ptr = unsafe { exec(json_data.as_ptr(), json_data.len() as u32) };
 
-        // Create a new byte array that holds the serialized JSON data
-        let serialized_data: Vec<u8> = serde_json::to_vec(&data).unwrap();
+        let results = unsafe { std::slice::from_raw_parts(result_ptr, 2) };
+        println!("results from test : {:?}", &results);
+        // Expected median values for Column_1 and Column_2
+        let expected_median_1 = 6.1; // Median of [1, 3, 3, 6.1, 7, 8.1, 9]
+        let expected_median_2 = 7.0; // Median of [3, 5, 6.1, 7, 7, 8.1, 9]
 
-        let res = unsafe { exec(serialized_data.as_ptr(), serialized_data.len() as u32) };
-        println!("Calculated median: {}", res);
-
-        // The mean of [8, 6, 8, 3, 7, 1, 9] is 6
-        assert_eq!(res, 6);
+        assert!((results[0] - expected_median_1).abs() < f32::EPSILON);
+        assert!((results[1] - expected_median_2).abs() < f32::EPSILON);
     }
 
-    #[test]
-    fn median_int_works_even() {
-        let data = read_data_from_json("median_int_works_even").unwrap();
-        println!("{:?}", data);
-
-        // Ensure that the data vector has the correct size
-        assert_eq!(data.len(), 8);
-
-        // Create a new byte array that holds the serialized JSON data
-        let serialized_data: Vec<u8> = serde_json::to_vec(&data).unwrap();
-
-        let res = unsafe { exec(serialized_data.as_ptr(), serialized_data.len() as u32) };
-        println!("Calculated median: {}", res);
-        assert_eq!(res, 4);
-    }
 }
