@@ -6,7 +6,7 @@ CXX ?= clang++
 SRC_U = app/
 SRC_T = enclave/
 SRC_WASM_MED= get-median-wasm/
-# SRC_WASM_MEAN= get-mean-wasm/
+SRC_WASM_MEAN= get-mean-wasm/
 # SRC_WASM_SD= get-sd-wasm/
 
 
@@ -25,6 +25,7 @@ enclave:
 wasm:
 	@echo "\033[32mRequest to compile the wasm part...\033[0m"
 	@make -C $(SRC_WASM_MED)
+	@make -C $(SRC_WASM_MEAN)
 
 clean:
 	@make -C $(SRC_U) clean

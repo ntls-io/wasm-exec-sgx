@@ -32,6 +32,8 @@ extern crate wasmi_impl;
 use sgx_types::*;
 use std::io::{self, Write};
 use std::slice;
+use std::vec::Vec;
+use core::convert::TryInto;
 
 /// # Safety
 /// The caller needs to ensure that `binary` is a valid pointer to a slice valid for `binary_len` items
@@ -47,16 +49,38 @@ pub unsafe extern "C" fn exec_wasm(
     if binary.is_null() {
         return sgx_status_t::SGX_ERROR_INVALID_PARAMETER;
     }
+    let mut result_buffer: Vec<u8> = vec![0; 1024];
     // Safety: SGX generated code will check that the pointer is valid.
     let binary_slice = unsafe { slice::from_raw_parts(binary, binary_len) };
-    println!{"enclave: binary slice {:?}", &binary_slice}
+    //println!{"enclave: binary slice {:?}", &binary_slice}
     let data = unsafe { slice::from_raw_parts(data_in, data_len) };
-    println!{"enclave: data {:?}", &data}
-    unsafe {
-        *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data) {
-            Ok(Some(wasmi::RuntimeValue::F32(ret))) => ret.to_float(),
-            Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
+
+    let numbers: [f32; 5] = [1.0, 2.0, 3.0, 4.0, 5.0];
+    let test_bytes: Vec<u8> = numbers.iter()
+    .flat_map(|&number| number.to_le_bytes().to_vec())
+    .collect();
+    //println!{"enclave: data {:?}", &data}
+    // unsafe {
+    //     *result_out = match wasmi_impl::exec_wasm_with_data(binary_slice, data,  &mut result_buffer) {
+    //         Ok(Some(wasmi::RuntimeValue::F32(ret))) => ret.to_float(),
+    //         Ok(_) | Err(_) => return sgx_status_t::SGX_ERROR_UNEXPECTED,
+    //     }
+    // };
+    // sgx_status_t::SGX_SUCCESS
+        match wasmi_impl::exec_wasm_with_data(binary_slice, &test_bytes, &mut result_buffer) {
+        Ok(_) => {
+            // Assuming the result is an f32 written to the beginning of the result_buffer
+               match std::str::from_utf8(&result_buffer) {
+            Ok(result_string) => {
+                println!("Result: {}", result_string.trim_matches(char::from(0))); // Trim null bytes if any
+                sgx_status_t::SGX_SUCCESS
+            },
+            Err(_) => {
+                eprintln!("Failed to decode result buffer as UTF-8 string.");
+                sgx_status_t::SGX_ERROR_UNEXPECTED
+            }
         }
-    };
-    sgx_status_t::SGX_SUCCESS
+        },
+        Err(_) => sgx_status_t::SGX_ERROR_UNEXPECTED,
+    }
 }

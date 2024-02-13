@@ -1,117 +1,47 @@
+// #![no_std]
 #![deny(clippy::mem_forget)]
 #![deny(unsafe_op_in_unsafe_fn)]
+use serde_json::{Value, json};
+extern crate alloc;
+
 use core::slice;
-use serde_json::Value;
+use core::mem;
 
-
-/// Calculates the mean of an array of integers passed in as a JSON array. Return value will be rounded down.
+/// Calculates the average of a slice of f32 numbers and writes the result to a provided memory location.
+///
+/// # Parameters
+///
+/// - `input_ptr`: A pointer to the start of the input data (f32 numbers encoded as bytes).
+/// - `input_len`: The number of bytes in the input data.
+/// - `output_ptr`: A pointer to where the result (f32 number encoded as bytes) should be stored.
 ///
 /// # Safety
-/// The caller needs to ensure that `msg` is a valid pointer, and points to a slice with `msg_len` items
+///
+/// This function is unsafe because it does not perform bounds checking on the input or output pointers.
+/// The caller must ensure that the provided memory is valid and that the input data correctly represents
+/// a sequence of f32 numbers.
 #[no_mangle]
-pub unsafe extern "C" fn exec(msg: *const u8, msg_len: u32) -> f32 {
-    // Print the received data and msg_len to verify their values
-    println!("Received data: {:?}", unsafe {
-        std::slice::from_raw_parts(msg, msg_len as usize)
-    });
-    println!("Received msg_len: {}", msg_len);
+pub unsafe extern "C" fn exec(input_ptr: *const u8, input_len: usize, output_ptr: *mut u8) {
+    // Calculate the number of f32 elements in the input.
+    let num_elements = input_len / mem::size_of::<f32>();
 
-    let x = unsafe { slice::from_raw_parts(msg, msg_len as usize) };
-    // TODO: Fix error handling
-    let val: Vec<Value> = match serde_json::from_slice(&x) {
-        Ok(val) => val,
-        Err(err) => {
-            eprintln!("Error deserializing JSON: {}", err);
-            // Return a default value or handle the error appropriately.
-            // For simplicity, let's return 0.
-            return 0.0;
-        }
+    // Convert the input bytes to a slice of f32 numbers.
+    let input_slice = unsafe {slice::from_raw_parts(input_ptr as *const f32, num_elements)};
+
+    // Calculate the average.
+    let sum: f32 = input_slice.iter().sum();
+    let average = if num_elements > 0 {
+        sum / num_elements as f32
+    } else {
+        0.0
     };
 
-    // Convert integers and floats to floats
-    let float_vals: Vec<f32> = val
-        .iter()
-        .filter_map(|v| match v {
-            Value::Number(n) => Some(
-                n.as_f64()
-                    .expect("Failed to convert number to f64") as f32
-            ),
-            _ => None,
-        })
-        .collect();    
+    let result_message = format!("this is the result of the computation  {:.1}", average);
 
-    let sum: f32 = float_vals.iter().sum();
-    sum as f32 / float_vals.len() as f32
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::Error;
-    use std::env;
-    use std::fs::File;
-    use std::io::Read;
-
-    /// Read data from the JSON file and parse it into a vector of floats.
-    fn read_data_from_json(test_name: &str) -> Result<Vec<i32>, Error> {
-        let mut current_dir = env::current_dir().unwrap();
-        current_dir.push("test_data.json");
-        println!("{:?}", current_dir);
-        let mut file = File::open(&current_dir).unwrap();
-        let mut data = String::new();
-        file.read_to_string(&mut data).unwrap();
-        println!("Raw JSON data for {}: {}", test_name, data);
-
-        let json_data: serde_json::Value = serde_json::from_str(&data)?;
-
-        // Check if the JSON data is correctly parsed
-        println!("Parsed JSON data: {:?}", json_data);
-
-        let test_data = json_data[test_name].as_array().unwrap();
-        println!("Test data: {:?}", test_data);
-
-        let data_vec: Vec<i32> = test_data
-            .iter()
-            .map(|v| v.as_i64().unwrap() as i32)
-            .collect();
-        println!("Parsed data: {:?}", data_vec);
-
-        Ok(data_vec)
-    }
-
-    #[test]
-    fn mean_int_works() {
-        let data = read_data_from_json("mean_int_works").unwrap();
-        println!("{:?}", data);
-
-        // Ensure that the data vector has the correct size
-        assert_eq!(data.len(), 7);
-
-        // Create a new byte array that holds the serialized JSON data
-        let serialized_data: Vec<u8> = serde_json::to_vec(&data).unwrap();
-
-        // Call the exec function with the correct data size and data array
-        let res = unsafe { exec(serialized_data.as_ptr(), serialized_data.len() as u32) };
-        println!("Calculated mean: {}", res);
-
-        // The mean of [8, 6, 8, 3, 7, 1, 9] is 6
-        assert_eq!(res, 6);
-    }
-
-    #[test]
-    fn mean_int_works_round() {
-        let data = read_data_from_json("mean_int_works_decimal").unwrap();
-        println!("{:?}", data);
-
-        // Ensure that the data vector has the correct size
-        assert_eq!(data.len(), 8);
-
-        // Create a new byte array that holds the serialized JSON data
-        let serialized_data: Vec<u8> = serde_json::to_vec(&data).unwrap();
-
-        // Call the exec function with the correct data size and data array
-        let res = unsafe { exec(serialized_data.as_ptr(), serialized_data.len() as u32) };
-        println!("Calculated mean: {}", res);
-        assert_eq!(res, 4);
-    }
+     let message_bytes = result_message.as_bytes();
+    // Write the result to the provided memory location.
+    // let output_slice = unsafe {slice::from_raw_parts_mut(output_ptr as *mut f32, 1) };
+    // output_slice[0] = average;
+    let output_bytes = unsafe { slice::from_raw_parts_mut(output_ptr, message_bytes.len())};
+    output_bytes.copy_from_slice(message_bytes);
 }

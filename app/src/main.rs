@@ -125,16 +125,16 @@ fn main() {
     };
     //// Median test
     // Numbers float and integer mixed
-    let median_json_path = create_json_path("get-median-wasm/test_data.json");
+    let median_json_path = create_json_path("get-mean-wasm/test_data.json");
     let data_median = read_data_from_json(
         &median_json_path,
-        "median_int_works_odd",
+        "mean_int_works",
     )
     .unwrap();
     let serialized_data_median: Vec<u8> = serde_json::to_vec(&data_median).unwrap(); // Create a new byte array that holds the serialized JSON data
-    println!("serialised data median {:?}",&serialized_data_median);
-    let binary_median = fs::read(WASM_FILE_MEDIAN).unwrap();
-    println!{"{:?}", &binary_median};
+    //println!("serialised data median {:?}",&serialized_data_median);
+    let binary_median = fs::read(WASM_FILE_MEAN).unwrap();
+    //println!{"{:?}", &binary_median};
     let mut result_out_median = 0f32;
 
     let result = unsafe {
