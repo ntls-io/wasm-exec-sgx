@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Column_1": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "Column_2": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        }
+    },
+    "required": [
+        "Column_1",
+        "Column_2"
+    ]
+}

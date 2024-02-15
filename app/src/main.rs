@@ -18,71 +18,39 @@
 extern crate sgx_types;
 extern crate sgx_urts;
 extern crate wabt;
+use serde_json::Error;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
-use std::fs;
 
-static WASM_FILE_MEDIAN_INT: &str = "get_median_int.wasm";
-static WASM_FILE_MEDIAN_FLOAT: &str = "get_median_float.wasm";
+extern crate serde_json;
+use serde_json::json;
+use std::path::Path;
+use std::{
+    fs::{self, File},
+    io::Read,
+};
+use std::env;
+use std::path::PathBuf;
+use serde_json::Value;
 
-static WASM_FILE_MEAN_INT: &str = "get_mean_int.wasm";
-static WASM_FILE_MEAN_FLOAT: &str = "get_mean_float.wasm";
+static WASM_FILE_MEDIAN: &str = "get_median_wasm.wasm";
 
-static WASM_FILE_SD_INT: &str = "get_sd_int.wasm";
-static WASM_FILE_SD_FLOAT: &str = "get_sd_float.wasm";
+static WASM_FILE_MEAN: &str = "get_mean_wasm.wasm";
+
+static WASM_FILE_SD: &str = "get_sd_wasm.wasm";
 
 static ENCLAVE_FILE: &str = "enclave.signed.so";
 
 extern "C" {
-
-    fn exec_wasm_median_int(
-        eid: sgx_enclave_id_t,
+    fn exec_wasm(eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
+        data_in: *const u8,
+        data_len: usize,
+        schema_in: *const u8,
+        schema_len: usize,
         binary: *const u8,
         binary_len: usize,
-        result_out: *mut i32,
     ) -> sgx_status_t;
-
-    fn exec_wasm_median_float(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_mean_int(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut i32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_mean_float(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_sd_int(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
-    fn exec_wasm_sd_float(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        binary: *const u8,
-        binary_len: usize,
-        result_out: *mut f32,
-    ) -> sgx_status_t;
-
 }
 
 fn init_enclave() -> SgxResult<SgxEnclave> {
@@ -104,6 +72,9 @@ fn init_enclave() -> SgxResult<SgxEnclave> {
     )
 }
 
+
+
+
 fn main() {
     let enclave = match init_enclave() {
         Ok(r) => {
@@ -118,71 +89,30 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    let binary_median_int = fs::read(WASM_FILE_MEDIAN_INT).unwrap();
-    let binary_median_float = fs::read(WASM_FILE_MEDIAN_FLOAT).unwrap();
+    let binary_median = fs::read(WASM_FILE_MEAN).unwrap();
+ 
+    // Construct the path to the JSON data and schema files.
+    let test_data_file_path = env::current_dir().unwrap().join("..").join("test_data").join("1_test_data.json");
+    let test_schema_file_path = env::current_dir().unwrap().join("..").join("test_data").join("1_test_schema.json");
 
-    let binary_mean_int = fs::read(WASM_FILE_MEAN_INT).unwrap();
-    let binary_mean_float = fs::read(WASM_FILE_MEAN_FLOAT).unwrap();
+    // Read the JSON data and schema from their respective files.
+    let test_json_data = read_json_from_file(&test_data_file_path).expect("Error reading JSON data file");
+    let test_json_schema = read_json_from_file(&test_schema_file_path).expect("Error reading JSON schema file");
 
-    let binary_sd_int = fs::read(WASM_FILE_SD_INT).unwrap();
-    let binary_sd_float = fs::read(WASM_FILE_SD_FLOAT).unwrap();
-
-    let mut result_out_median_int = 0i32;
-    let mut result_out_median_float = 0f32;
-
-    let mut result_out_mean_int = 0i32;
-    let mut result_out_mean_float = 0f32;
-
-    let mut result_out_sd_int = 0f32;
-    let mut result_out_sd_float = 0f32;
+    // Serialize the JSON data and schema.
+    let test_serialized_data = serde_json::to_vec(&test_json_data).expect("Failed to serialize data");
+    let test_serialized_schema = serde_json::to_vec(&test_json_schema).expect("Failed to serialize schema");
 
     let result = unsafe {
-        exec_wasm_median_int(
+        exec_wasm(
             enclave.geteid(),
             &mut retval,
-            binary_median_int.as_ptr(),
-            binary_median_int.len(),
-            &mut result_out_median_int,
-        );
-
-        exec_wasm_median_float(
-            enclave.geteid(),
-            &mut retval,
-            binary_median_float.as_ptr(),
-            binary_median_float.len(),
-            &mut result_out_median_float,
-        );
-
-        exec_wasm_mean_int(
-            enclave.geteid(),
-            &mut retval,
-            binary_mean_int.as_ptr(),
-            binary_mean_int.len(),
-            &mut result_out_mean_int,
-        );
-
-        exec_wasm_mean_float(
-            enclave.geteid(),
-            &mut retval,
-            binary_mean_float.as_ptr(),
-            binary_mean_float.len(),
-            &mut result_out_mean_float,
-        );
-
-        exec_wasm_sd_int(
-            enclave.geteid(),
-            &mut retval,
-            binary_sd_int.as_ptr(),
-            binary_sd_int.len(),
-            &mut result_out_sd_int,
-        );
-
-        exec_wasm_sd_float(
-            enclave.geteid(),
-            &mut retval,
-            binary_sd_float.as_ptr(),
-            binary_sd_float.len(),
-            &mut result_out_sd_float,
+            test_serialized_data.as_ptr(),
+            test_serialized_data.len(),
+            test_serialized_schema.as_ptr(),
+            test_serialized_schema.len(),
+            binary_median.as_ptr(),
+            binary_median.len(),
         )
     };
 
@@ -194,14 +124,17 @@ fn main() {
         }
     }
 
-    println!("[+] ecall_test success, Median Int result -  {:?}", result_out_median_int);
-    println!("[+] ecall_test success, Median Float result -  {:?}", result_out_median_float);
-    println!();
-    println!("[+] ecall_test success, Mean Int result -  {:?}", result_out_mean_int);
-    println!("[+] ecall_test success, Mean Float result -  {:?}", result_out_mean_float);
-    println!();
-    println!("[+] ecall_test success, SD Int result -  {:?}", result_out_sd_int);
-    println!("[+] ecall_test success, SD Float result -  {:?}", result_out_sd_float);
+    println!(
+        "[+] ecall_test success",
+        
+    );
 
     enclave.destroy();
+}
+
+fn read_json_from_file<P: AsRef<Path>>(path: P) -> Result<Value, serde_json::Error> {
+    let mut file = File::open(path).expect("Unable to open file");
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Unable to read file");
+    serde_json::from_str(&contents)
 }
