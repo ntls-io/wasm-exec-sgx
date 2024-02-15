@@ -23,6 +23,7 @@ use sgx_types::*;
 use sgx_urts::SgxEnclave;
 
 extern crate serde_json;
+use serde_json::json;
 use std::path::Path;
 use std::{
     fs::{self, File},
@@ -30,6 +31,7 @@ use std::{
 };
 use std::env;
 use std::path::PathBuf;
+use serde_json::Value;
 
 static WASM_FILE_MEDIAN: &str = "get_median_wasm.wasm";
 
@@ -44,9 +46,10 @@ extern "C" {
         retval: *mut sgx_status_t,
         data_in: *const u8,
         data_len: usize,
+        schema_in: *const u8,
+        schema_len: usize,
         binary: *const u8,
         binary_len: usize,
-        result_out: *mut f32,
     ) -> sgx_status_t;
 }
 
@@ -69,38 +72,8 @@ fn init_enclave() -> SgxResult<SgxEnclave> {
     )
 }
 
-/// Read data from the JSON file and parse it into a vector of ints.
-fn read_data_from_json(file_path: &str, array_name: &str) -> Result<Vec<f32>, Error> {
-    let path = Path::new(file_path);
-    let mut file = File::open(&path).unwrap();
-    let mut data = String::new();
-    file.read_to_string(&mut data).unwrap();
 
-    let json_data: serde_json::Value = serde_json::from_str(&data)?;
 
-    let array_data = json_data[array_name].as_array().unwrap();
-
-    let data_vec: Vec<f32> = array_data
-        .iter()
-        .map(|v| v.as_f64().unwrap() as f32)
-        .collect();
-
-    Ok(data_vec)
-}
-
-// Helper function to create a path for JSON files
-fn create_json_path(relative_path: &str) -> String {
-    let current_dir = match env::current_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            eprintln!("Failed to get current directory: {}", e);
-            panic!("Cannot continue without a current directory.");
-        }
-    };
-    let parent_dir = current_dir.join("..");
-    let full_path = parent_dir.join(relative_path);
-    full_path.to_str().unwrap().to_string()
-}
 
 fn main() {
     let enclave = match init_enclave() {
@@ -116,36 +89,30 @@ fn main() {
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
-    let current_dir = match env::current_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            eprintln!("Failed to get current directory: {}", e);
-            return;
-        }
-    };
-    //// Median test
-    // Numbers float and integer mixed
-    let median_json_path = create_json_path("get-mean-wasm/test_data.json");
-    let data_median = read_data_from_json(
-        &median_json_path,
-        "mean_int_works",
-    )
-    .unwrap();
-    let serialized_data_median: Vec<u8> = serde_json::to_vec(&data_median).unwrap(); // Create a new byte array that holds the serialized JSON data
-    //println!("serialised data median {:?}",&serialized_data_median);
     let binary_median = fs::read(WASM_FILE_MEAN).unwrap();
-    //println!{"{:?}", &binary_median};
-    let mut result_out_median = 0f32;
+ 
+    // Construct the path to the JSON data and schema files.
+    let test_data_file_path = env::current_dir().unwrap().join("..").join("test_data").join("1_test_data.json");
+    let test_schema_file_path = env::current_dir().unwrap().join("..").join("test_data").join("1_test_schema.json");
+
+    // Read the JSON data and schema from their respective files.
+    let test_json_data = read_json_from_file(&test_data_file_path).expect("Error reading JSON data file");
+    let test_json_schema = read_json_from_file(&test_schema_file_path).expect("Error reading JSON schema file");
+
+    // Serialize the JSON data and schema.
+    let test_serialized_data = serde_json::to_vec(&test_json_data).expect("Failed to serialize data");
+    let test_serialized_schema = serde_json::to_vec(&test_json_schema).expect("Failed to serialize schema");
 
     let result = unsafe {
         exec_wasm(
             enclave.geteid(),
             &mut retval,
-            serialized_data_median.as_ptr(),
-            serialized_data_median.len(),
+            test_serialized_data.as_ptr(),
+            test_serialized_data.len(),
+            test_serialized_schema.as_ptr(),
+            test_serialized_schema.len(),
             binary_median.as_ptr(),
             binary_median.len(),
-            &mut result_out_median,
         )
     };
 
@@ -158,9 +125,16 @@ fn main() {
     }
 
     println!(
-        "[+] ecall_test success, Median result -  {:?}",
-        result_out_median
+        "[+] ecall_test success",
+        
     );
 
     enclave.destroy();
+}
+
+fn read_json_from_file<P: AsRef<Path>>(path: P) -> Result<Value, serde_json::Error> {
+    let mut file = File::open(path).expect("Unable to open file");
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Unable to read file");
+    serde_json::from_str(&contents)
 }

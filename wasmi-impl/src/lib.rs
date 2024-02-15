@@ -13,6 +13,7 @@ use alloc::string::ToString;
 use core::convert::TryInto;
 use alloc::vec::Vec;
 use alloc::vec;
+use core::slice;
 
 static ENTRYPOINT: &str = "exec";
 
@@ -107,6 +108,62 @@ pub fn exec_wasm(binary: &[u8]) -> Result<Option<RuntimeValue>, ExecWasmError> {
     let instance = ModuleInstance::new(&module, &ImportsBuilder::default())?.assert_no_start();
     Ok(instance.invoke_export(ENTRYPOINT, &[], &mut NopExternals)?)
 }
+
+pub fn exec_wasm_with_data_and_schema(
+    binary: &[u8],
+    input_data_ptr: *const u8,
+    input_data_len: usize,
+    input_schema_ptr: *const u8,
+    input_schema_len: usize,
+    output_ptr: *mut u8,
+    output_len: usize,
+) -> Result<(), ExecWasmError> {
+    let module = wasmi::Module::from_buffer(binary)?;
+
+    // Allocate memory large enough to accommodate data, schema, and output
+    let mem_instance = MemoryInstance::alloc(Pages(100), None)?;
+
+    // Write input data and schema to WASM module's memory
+    let data_slice = unsafe { slice::from_raw_parts(input_data_ptr, input_data_len) };
+    let schema_slice = unsafe { slice::from_raw_parts(input_schema_ptr, input_schema_len) };
+
+    let input_offset = 0;
+    mem_instance.set(input_offset, data_slice)?;
+
+    let schema_offset = input_data_len as u32; // Adjust offset for schema data
+    mem_instance.set(schema_offset, schema_slice)?;
+
+    let result_buffer_offset = schema_offset + input_schema_len as u32; // Adjust offset for result buffer
+
+    let resolver = CustomImportResolver {
+        memory: mem_instance.clone(),
+    };
+
+    let instance = ModuleInstance::new(&module, &ImportsBuilder::new().with_resolver("env", &resolver))
+        .map_err(|_| ExecWasmError::ExecutionError)?
+        .assert_no_start();
+
+    // Adjust parameters to pass to WASM function
+    let params = [
+        RuntimeValue::I32(input_offset as i32),
+        RuntimeValue::I32(input_data_len as i32),
+        RuntimeValue::I32(schema_offset as i32),
+        RuntimeValue::I32(input_schema_len as i32),
+        RuntimeValue::I32(result_buffer_offset as i32),
+        RuntimeValue::I32(output_len as i32),
+    ];
+
+    instance.invoke_export(ENTRYPOINT, &params, &mut NopExternals)
+        .map_err(|_| ExecWasmError::ExecutionError)?;
+
+    // Read the result from memory into the provided output buffer
+    let output_slice = unsafe { slice::from_raw_parts_mut(output_ptr, output_len) };
+    mem_instance.get_into((result_buffer_offset as usize).try_into().unwrap(), output_slice)
+        .map_err(|_| ExecWasmError::MemoryError)?;
+    Ok(())
+}
+
+
 
 #[cfg(test)]
 mod tests {
